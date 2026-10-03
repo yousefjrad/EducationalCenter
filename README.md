@@ -21,7 +21,7 @@ dotnet build EducationalCenter.slnx
 ## Status
 - [x] Phase 1: Solution + Domain layer
 - [x] Phase 2a: Application foundation + Courses feature (template for the rest)
-- [ ] Phase 2b: remaining Application features (Rooms, Trainers, Students, Sections, ClassSessions, Enrollments, WaitingList done)
+- [ ] Phase 2b: remaining Application features (Rooms, Trainers, Students, Sections, ClassSessions, Enrollments, WaitingList, Attendance, Grades, Certificates, PaymentPlans, Payments, Receipts, Expenses, TrainerPayrolls, Settings, Users, Roles, Auth, AuditLogs, Reports done)
 - [ ] Phase 3: Infrastructure
 - [ ] Phase 4: API
 - [ ] Phase 5: Tests
