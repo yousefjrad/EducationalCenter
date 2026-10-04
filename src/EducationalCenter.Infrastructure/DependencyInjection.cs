@@ -1,4 +1,6 @@
 using EducationalCenter.Application.Common.Interfaces;
+using EducationalCenter.Infrastructure.Backups;
+using EducationalCenter.Infrastructure.BackgroundJobs;
 using EducationalCenter.Infrastructure.Common;
 using EducationalCenter.Infrastructure.Documents;
 using EducationalCenter.Infrastructure.Persistence;
@@ -29,7 +31,12 @@ public static class DependencyInjection
         if (jwt.AccessTokenMinutes <= 0)
             throw new InvalidOperationException("Jwt:AccessTokenMinutes must be greater than zero.");
 
+        var backup = configuration.GetSection(BackupOptions.SectionName).Get<BackupOptions>() ?? new BackupOptions();
+        if (backup.RetentionDays < 1)
+            throw new InvalidOperationException("Backup:RetentionDays must be at least 1.");
+
         services.AddSingleton(jwt);
+        services.AddSingleton(backup);
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<IAccessTokenGenerator, JwtAccessTokenGenerator>();
@@ -51,7 +58,14 @@ public static class DependencyInjection
         services.AddSingleton<IReportExporter, ReportExporter>();
         services.AddSingleton<IExcelService, ExcelService>();
 
-        // Logging, background jobs and backups are registered here in the next batch.
+        services.AddScoped<SqlServerBackupService>();
+        services.AddScoped<IBackupService>(provider => provider.GetRequiredService<SqlServerBackupService>());
+
+        services.AddHostedService<ExpireEnrollmentHoldsService>();
+        if (backup.Enabled)
+            services.AddHostedService<DatabaseBackupService>();
+
+        // Logging (Serilog) is configured on the host in the next phase (Program.cs).
 
         return services;
     }

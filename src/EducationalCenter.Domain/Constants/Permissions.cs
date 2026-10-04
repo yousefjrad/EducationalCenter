@@ -27,6 +27,7 @@ public static class Permissions
     public static class Roles { public const string View = "Roles.View"; public const string Manage = "Roles.Manage"; }
     public static class Settings { public const string View = "Settings.View"; public const string Update = "Settings.Update"; }
     public static class AuditLog { public const string View = "AuditLog.View"; }
+    public static class Backups { public const string View = "Backups.View"; public const string Create = "Backups.Create"; }
 
     /// <summary>Every permission name defined above (used for seeding and for the Admin role).</summary>
     public static IReadOnlyList<string> All { get; } = typeof(Permissions)

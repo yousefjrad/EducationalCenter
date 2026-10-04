@@ -41,5 +41,33 @@ default settings, default certificate templates (Arabic and English), and the fi
 ## PDF and Excel
 - Excel files (report exports, import templates, import reading) use ClosedXML.
 - PDF files (receipts, certificates, report PDFs) are parked for now: see `docs/PDF.md`.
-- ClosedXML uses a floating minor (`0.104.*`). After a successful restore, pin the exact version shown by
-  `dotnet list package` so builds stay reproducible.
+- ClosedXML is pinned to 0.104.2. To check versions use
+  `dotnet list package`.
+
+## Background jobs
+Both start with the API (next phase) and need no setup:
+- Every 5 minutes, temporary enrollment holds that ran out are cancelled.
+- Every day at `Backup:DailyAtLocalTime` (default 02:00 local time) a full database backup is taken and verified.
+
+## Backups
+Settings in `appsettings.json`, section `Backup`:
+- `Enabled`: turn the daily backup on or off.
+- `Directory`: leave empty to use SQL Server's default backup folder (always writable by SQL Server).
+  If you set a folder, it must be on the machine where SQL Server runs and SQL Server's service account
+  must be able to write to it. Pointing it at an external drive is the safest place for a second copy.
+- `DailyAtLocalTime`: "HH:mm".
+- `RetentionDays`: older backups are deleted, but the 3 newest are always kept. Deleting is best effort:
+  if the application is not allowed to delete in that folder, a warning is logged and the file stays.
+
+Backups are compressed except on SQL Server Express/LocalDB, which does not support compression.
+Each backup is verified (`RESTORE VERIFYONLY`). The Admin can also take one on demand and list the recent ones
+(permissions `Backups.Create` and `Backups.View`).
+
+To restore (run in SQL Server Management Studio, with the API stopped):
+
+```sql
+USE master;
+ALTER DATABASE [EducationalCenter] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+RESTORE DATABASE [EducationalCenter] FROM DISK = N'C:\path\to\EducationalCenter_20261004_020000.bak' WITH REPLACE;
+ALTER DATABASE [EducationalCenter] SET MULTI_USER;
+```
