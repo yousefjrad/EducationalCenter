@@ -14,7 +14,7 @@ public interface IEnrollmentRepository : IRepository<Enrollment>
     /// </summary>
     Task<bool> HasActiveEnrollmentAsync(int studentId, int sectionId, DateTime utcNow, CancellationToken ct = default);
 
-    /// <summary>Tracked. Loads Student, Section (with Course), PaymentPlan and Certificate.</summary>
+    /// <summary>Tracked. Loads Student, Section (with Course), PaymentPlan, Certificate and Grade.</summary>
     Task<Enrollment?> GetWithDetailsAsync(int id, CancellationToken ct = default);
 
     /// <summary>Tracked. Pending enrollments whose HoldExpiresAt is on or before <paramref name="utcNow"/>.</summary>
@@ -24,4 +24,19 @@ public interface IEnrollmentRepository : IRepository<Enrollment>
     Task<(IReadOnlyList<Enrollment> Items, int TotalCount)> SearchAsync(
         int? studentId, int? sectionId, EnrollmentStatus? status,
         int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>Tracked, with Student loaded. Enrollments of the section that are Confirmed or Completed.</summary>
+    Task<IReadOnlyList<Enrollment>> GetEnrolledBySectionAsync(int sectionId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sum of AmountInSyp of the enrollment's payments with status Valid
+    /// (across all installments of its payment plan). Zero if there is no plan or no payment.
+    /// </summary>
+    Task<decimal> GetPaidAmountInSypAsync(int enrollmentId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Tracked. The student's Confirmed or Completed enrollment in the section, or null, with
+    /// PaymentPlan, its Installments and their Payments (all statuses) loaded. Used by the legacy payments import.
+    /// </summary>
+    Task<Enrollment?> GetForLegacyImportAsync(int studentId, int sectionId, CancellationToken ct = default);
 }

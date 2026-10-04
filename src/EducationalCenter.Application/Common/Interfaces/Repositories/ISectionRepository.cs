@@ -23,4 +23,7 @@ public interface ISectionRepository : IRepository<Section>
     Task<(IReadOnlyList<Section> Items, int TotalCount)> SearchAsync(
         string? search, int? courseId, int? trainerId, int? roomId, SectionStatus? status,
         int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>The section with that name inside the course (case-insensitive), or null.</summary>
+    Task<Section?> GetByNameAsync(int courseId, string name, CancellationToken ct = default);
 }

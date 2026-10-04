@@ -12,6 +12,22 @@ public interface IUnitOfWork
     IClassSessionRepository ClassSessions { get; }
     IEnrollmentRepository Enrollments { get; }
     IWaitingListRepository WaitingList { get; }
+    IAttendanceRepository Attendances { get; }
+    IGradeRepository Grades { get; }
+    ICertificateRepository Certificates { get; }
+    ICertificateTemplateRepository CertificateTemplates { get; }
+    IPaymentPlanRepository PaymentPlans { get; }
+    IPaymentRepository Payments { get; }
+    IReceiptRepository Receipts { get; }
+    IExpenseRepository Expenses { get; }
+    ITrainerPayrollRepository TrainerPayrolls { get; }
+    IUserRepository Users { get; }
+    IRoleRepository Roles { get; }
+    IPermissionRepository Permissions { get; }
+    ISettingRepository Settings { get; }
+    IRefreshTokenRepository RefreshTokens { get; }
+    IReportRepository Reports { get; }
+    IAuditLogRepository AuditLogs { get; }
     // More repositories are added here as later features need them.
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);

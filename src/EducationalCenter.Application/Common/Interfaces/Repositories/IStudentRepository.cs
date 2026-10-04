@@ -13,4 +13,7 @@ public interface IStudentRepository : IRepository<Student>
     /// <summary>Search by name or phone.</summary>
     Task<(IReadOnlyList<Student> Items, int TotalCount)> SearchAsync(
         string? search, bool? isActive, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>The student with exactly that name and phone (name case-insensitive), or null.</summary>
+    Task<Student?> FindByNameAndPhoneAsync(string fullName, string phoneNumber, CancellationToken ct = default);
 }

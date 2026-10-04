@@ -9,4 +9,7 @@ public interface ICourseRepository : IRepository<Course>
 
     Task<(IReadOnlyList<Course> Items, int TotalCount)> SearchAsync(
         string? search, bool? isActive, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>The course with that code (codes are stored upper-case), or null.</summary>
+    Task<Course?> GetByCodeAsync(string code, CancellationToken ct = default);
 }

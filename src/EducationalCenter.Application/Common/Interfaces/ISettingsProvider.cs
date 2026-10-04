@@ -4,4 +4,5 @@ namespace EducationalCenter.Application.Common.Interfaces;
 public interface ISettingsProvider
 {
     Task<int> GetIntAsync(string key, int defaultValue, CancellationToken ct = default);
+    Task<string> GetStringAsync(string key, string defaultValue, CancellationToken ct = default);
 }

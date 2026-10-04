@@ -166,6 +166,17 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionServ
             }
         }
 
+        if (request.Status == SectionStatus.Completed)
+        {
+            // Finishing the section completes its confirmed enrollments.
+            var enrolled = await uow.Enrollments.GetEnrolledBySectionAsync(id, ct);
+            foreach (var enrollment in enrolled.Where(x => x.Status == EnrollmentStatus.Confirmed))
+            {
+                enrollment.Status = EnrollmentStatus.Completed;
+                uow.Enrollments.Update(enrollment);
+            }
+        }
+
         section.Status = request.Status;
         uow.Sections.Update(section);
         await uow.SaveChangesAsync(ct);

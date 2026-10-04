@@ -27,4 +27,18 @@ public interface IClassSessionRepository : IRepository<ClassSession>
     Task<(IReadOnlyList<ClassSession> Items, int TotalCount)> SearchAsync(
         int? sectionId, int? roomId, int? trainerId, DateOnly? from, DateOnly? to, ClassSessionStatus? status,
         int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sessions of the trainer with status Held and Date within [from, to] (inclusive).
+    /// No navigation properties needed.
+    /// </summary>
+    Task<IReadOnlyList<ClassSession>> GetHeldByTrainerAsync(
+        int trainerId, DateOnly from, DateOnly to, CancellationToken ct = default);
+
+    /// <summary>
+    /// Every session (any status) in [from, to] inclusive, optionally for one room and/or one trainer,
+    /// with Section (and its Course), Room and Trainer loaded, ordered by date then start time.
+    /// </summary>
+    Task<IReadOnlyList<ClassSession>> GetScheduleAsync(
+        int? roomId, int? trainerId, DateOnly from, DateOnly to, CancellationToken ct = default);
 }
