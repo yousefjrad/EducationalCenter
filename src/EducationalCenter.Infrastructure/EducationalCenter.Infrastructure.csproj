@@ -8,7 +8,18 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.2" />
+    <PackageReference Include="ClosedXML" Version="0.104.*" />
   </ItemGroup>
+
+  <!--
+    PDF generation (QuestPDF) is parked until the package can be downloaded reliably.
+    These files stay in the repository but are not compiled. See docs/PDF.md to switch them back on.
+  -->
+  <ItemGroup>
+    <Compile Remove="Documents\PdfSetup.cs" />
+    <Compile Remove="Documents\QuestPdf*.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\EducationalCenter.Application\EducationalCenter.Application.csproj" />
   </ItemGroup>

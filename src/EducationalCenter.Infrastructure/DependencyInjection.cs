@@ -1,5 +1,6 @@
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Infrastructure.Common;
+using EducationalCenter.Infrastructure.Documents;
 using EducationalCenter.Infrastructure.Persistence;
 using EducationalCenter.Infrastructure.Persistence.Interceptors;
 using EducationalCenter.Infrastructure.Persistence.Repositories;
@@ -44,7 +45,13 @@ public static class DependencyInjection
         services.AddScoped<ISettingsProvider, DatabaseSettingsProvider>();
         services.AddScoped<IReceiptNumberGenerator, ReceiptNumberGenerator>();
 
-        // PDF and Excel services, logging and background jobs are registered here in the next batches.
+        // PDF is parked (docs/PDF.md): these stand-ins report "not installed" instead of failing the build.
+        services.AddSingleton<IReceiptPdfGenerator, UnavailableReceiptPdfGenerator>();
+        services.AddSingleton<ICertificatePdfGenerator, UnavailableCertificatePdfGenerator>();
+        services.AddSingleton<IReportExporter, ReportExporter>();
+        services.AddSingleton<IExcelService, ExcelService>();
+
+        // Logging, background jobs and backups are registered here in the next batch.
 
         return services;
     }

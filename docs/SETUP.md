@@ -37,3 +37,9 @@ Later model changes: `dotnet ef migrations add <Name> ...` with the same two pro
 ## First start (next phase)
 On start the API applies pending migrations and seeds: permissions, the Admin and Receptionist roles,
 default settings, default certificate templates (Arabic and English), and the first Admin user from the `Seed:*` secrets.
+
+## PDF and Excel
+- Excel files (report exports, import templates, import reading) use ClosedXML.
+- PDF files (receipts, certificates, report PDFs) are parked for now: see `docs/PDF.md`.
+- ClosedXML uses a floating minor (`0.104.*`). After a successful restore, pin the exact version shown by
+  `dotnet list package` so builds stay reproducible.
