@@ -48,10 +48,12 @@ internal sealed class SqlServerBackupService(
         // Large databases can take a while.
         db.Database.SetCommandTimeout(TimeSpan.FromMinutes(30));
 
+        #pragma warning disable EF1002 // The database name cannot be a SQL parameter: it is bracket-quoted above, the compression clause is a fixed value, and the file path is a real parameter.
         await db.Database.ExecuteSqlRawAsync(
             $"BACKUP DATABASE {quotedName} TO DISK = @path WITH INIT, CHECKSUM{compression}",
             new object[] { new SqlParameter("@path", path) },
             ct);
+        #pragma warning restore EF1002
 
         await db.Database.ExecuteSqlRawAsync(
             "RESTORE VERIFYONLY FROM DISK = @path WITH CHECKSUM",
