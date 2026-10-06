@@ -1,3 +1,4 @@
+using EducationalCenter.Application.Features.Alerts;
 using EducationalCenter.Application.Features.Reports;
 using EducationalCenter.Domain.Enums;
 
@@ -40,4 +41,10 @@ public interface IReportRepository
     /// </summary>
     Task<IReadOnlyList<SectionOccupancyRow>> GetSectionOccupancyAsync(
         DateTime utcNow, SectionStatus? status, int? courseId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sections that accept enrollments (OpenForEnrollment or InProgress), have at least one seat free
+    /// (same seat rule as CountSeatsTakenAsync) and at least one Waiting entry, with the first person in line.
+    /// </summary>
+    Task<IReadOnlyList<WaitingPromotionRow>> GetPromotableWaitingAsync(DateTime utcNow, CancellationToken ct = default);
 }

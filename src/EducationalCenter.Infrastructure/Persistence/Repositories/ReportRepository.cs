@@ -1,4 +1,5 @@
 using EducationalCenter.Application.Common.Interfaces.Repositories;
+using EducationalCenter.Application.Features.Alerts;
 using EducationalCenter.Application.Features.Reports;
 using EducationalCenter.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -172,5 +173,50 @@ internal sealed class ReportRepository(AppDbContext db) : IReportRepository
                                          || (e.Status == EnrollmentStatus.Pending && e.HoldExpiresAt > utcNow)),
                 s.WaitingList.Count(w => w.Status == WaitingListStatus.Waiting)))
             .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<WaitingPromotionRow>> GetPromotableWaitingAsync(
+        DateTime utcNow, CancellationToken ct = default)
+    {
+        var sections = await db.Sections.AsNoTracking()
+            .Where(s => (s.Status == SectionStatus.OpenForEnrollment || s.Status == SectionStatus.InProgress)
+                        && s.WaitingList.Any(w => w.Status == WaitingListStatus.Waiting))
+            .Select(s => new
+            {
+                s.Id,
+                s.Name,
+                CourseName = s.Course.Name,
+                s.Capacity,
+                SeatsTaken = s.Enrollments.Count(e => e.Status == EnrollmentStatus.Confirmed
+                                                      || (e.Status == EnrollmentStatus.Pending && e.HoldExpiresAt > utcNow)),
+                WaitingCount = s.WaitingList.Count(w => w.Status == WaitingListStatus.Waiting)
+            })
+            .ToListAsync(ct);
+
+        var withVacancy = sections.Where(s => s.SeatsTaken < s.Capacity).ToList();
+        if (withVacancy.Count == 0)
+            return [];
+
+        // Second, small query: the people waiting in just those sections, so the first in line can be named.
+        var sectionIds = withVacancy.Select(s => s.Id).ToList();
+        var waiting = await db.WaitingListEntries.AsNoTracking()
+            .Include(w => w.Student)
+            .Where(w => sectionIds.Contains(w.SectionId) && w.Status == WaitingListStatus.Waiting)
+            .OrderBy(w => w.SectionId).ThenBy(w => w.Position)
+            .ToListAsync(ct);
+
+        var firstBySection = waiting.GroupBy(w => w.SectionId).ToDictionary(g => g.Key, g => g.First());
+
+        return withVacancy
+            .Where(s => firstBySection.ContainsKey(s.Id))
+            .Select(s =>
+            {
+                var first = firstBySection[s.Id];
+                return new WaitingPromotionRow(
+                    s.Id, s.Name, s.CourseName, s.Capacity - s.SeatsTaken, s.WaitingCount,
+                    first.Id, first.StudentId, first.Student.FullName, first.Student.PhoneNumber);
+            })
+            .OrderBy(r => r.CourseName).ThenBy(r => r.SectionName)
+            .ToList();
     }
 }

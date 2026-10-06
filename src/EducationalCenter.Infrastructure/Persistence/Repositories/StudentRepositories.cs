@@ -81,6 +81,14 @@ internal sealed class EnrollmentRepository(AppDbContext context) : Repository<En
             .OrderBy(e => e.Student.FullName)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Enrollment>> GetPendingAsync(CancellationToken ct = default) =>
+        await Set.AsNoTracking()
+            .Include(e => e.Student)
+            .Include(e => e.Section)
+            .Where(e => e.Status == EnrollmentStatus.Pending)
+            .OrderBy(e => e.HoldExpiresAt)
+            .ToListAsync(ct);
+
     public async Task<decimal> GetPaidAmountInSypAsync(int enrollmentId, CancellationToken ct = default)
     {
         var total = await Db.Payments

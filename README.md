@@ -22,8 +22,8 @@ dotnet build EducationalCenter.slnx
 - [x] Phase 1: Solution + Domain layer
 - [x] Phase 2a: Application foundation + Courses feature (template for the rest)
 - [x] Phase 2b: Application features (Rooms, Trainers, Students, Sections, ClassSessions, Enrollments, WaitingList, Attendance, Grades, Certificates, PaymentPlans, Payments, Receipts, Expenses, TrainerPayrolls, Settings, Users, Roles, Auth, AuditLogs, Reports, Imports done; Application layer complete)
-- [ ] Phase 3: Infrastructure (3a DbContext + EF configurations, 3b repositories + UnitOfWork, 3c seeding + security services, 3d Excel done and PDF parked, 3e background jobs + backups done)
-- [ ] Phase 4: API
+- [ ] Phase 3: Infrastructure (3a DbContext + EF configurations, 3b repositories + UnitOfWork, 3c seeding + security services, 3d Excel done and PDF parked, 3e background jobs + backups done; alerts done)
+- [ ] Phase 4: API (4a host, JWT, permissions, errors, Swagger, Serilog, Auth + Alerts done)
 - [ ] Phase 5: Tests
 
 See `docs/ERD.md` for the data model.

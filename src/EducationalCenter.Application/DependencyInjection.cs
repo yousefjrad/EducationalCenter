@@ -1,6 +1,7 @@
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Application.Common.Services;
 using EducationalCenter.Application.Features.Attendances;
+using EducationalCenter.Application.Features.Alerts;
 using EducationalCenter.Application.Features.AuditLogs;
 using EducationalCenter.Application.Features.Auth;
 using EducationalCenter.Application.Features.CertificateTemplates;
@@ -67,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IImporter, SectionImporter>();
         services.AddScoped<IImporter, LegacyPaymentImporter>();
         services.AddScoped<IImportService, ImportService>();
+        services.AddScoped<IAlertService, AlertService>();
         // Later features are registered here, following the same pattern.
 
         return services;

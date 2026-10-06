@@ -39,4 +39,10 @@ public interface IEnrollmentRepository : IRepository<Enrollment>
     /// PaymentPlan, its Installments and their Payments (all statuses) loaded. Used by the legacy payments import.
     /// </summary>
     Task<Enrollment?> GetForLegacyImportAsync(int studentId, int sectionId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Every Pending enrollment (seat hold waiting for confirmation), earliest HoldExpiresAt first,
+    /// with Student and Section loaded. Includes holds that already expired but were not cancelled yet.
+    /// </summary>
+    Task<IReadOnlyList<Enrollment>> GetPendingAsync(CancellationToken ct = default);
 }
