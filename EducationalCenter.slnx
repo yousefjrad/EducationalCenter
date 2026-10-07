@@ -5,4 +5,7 @@
     <Project Path="src/EducationalCenter.Infrastructure/EducationalCenter.Infrastructure.csproj" />
     <Project Path="src/EducationalCenter.API/EducationalCenter.API.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/EducationalCenter.Tests/EducationalCenter.Tests.csproj" />
+  </Folder>
 </Solution>
