@@ -21,4 +21,10 @@
     <ProjectReference Include="..\..\src\EducationalCenter.Application\EducationalCenter.Application.csproj" />
     <ProjectReference Include="..\..\src\EducationalCenter.Domain\EducationalCenter.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\EducationalCenter.Infrastructure\EducationalCenter.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 </Project>
