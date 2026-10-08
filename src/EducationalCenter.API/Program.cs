@@ -35,6 +35,21 @@ try
     // Applies migrations and adds what is missing: permissions, roles, settings, templates, first Admin.
     await DatabaseInitializer.InitializeAsync(app.Services);
 
+    // HTTPS is opt-in: set "Security:UseHttps": true where the site is served over HTTPS.
+    if (app.Configuration.GetValue<bool>("Security:UseHttps"))
+    {
+        app.UseHsts();
+        app.UseHttpsRedirection();
+    }
+
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["X-Frame-Options"] = "DENY";
+        context.Response.Headers["Referrer-Policy"] = "no-referrer";
+        await next();
+    });
+
     app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
     app.UseStatusCodePages();

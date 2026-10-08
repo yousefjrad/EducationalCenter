@@ -30,6 +30,9 @@ public sealed class WaitingListService(IUnitOfWork uow, IClock clock, IEnrollmen
     {
         return uow.ExecuteInTransactionAsync(async () =>
         {
+            // Same lock as enrollments: the queue position and the seat check must not race.
+            await uow.LockSectionAsync(request.SectionId, ct);
+
             var student = await uow.Students.GetByIdAsync(request.StudentId, ct)
                 ?? throw new NotFoundException(nameof(Student), request.StudentId);
             if (!student.IsActive)
@@ -79,6 +82,9 @@ public sealed class WaitingListService(IUnitOfWork uow, IClock clock, IEnrollmen
 
             if (entry.Status != WaitingListStatus.Waiting)
                 throw new ConflictException("Only waiting entries can be cancelled.");
+
+            // Renumbering the queue must not interleave with another change to the same queue.
+            await uow.LockSectionAsync(entry.SectionId, ct);
 
             entry.Status = WaitingListStatus.Cancelled;
             uow.WaitingList.Update(entry);

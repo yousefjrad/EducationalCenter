@@ -12,5 +12,11 @@ public class User : BaseEntity
     public bool IsActive { get; set; } = true;
     public DateTime? LastLoginAt { get; set; }
 
+    /// <summary>Consecutive failed sign-ins since the last success or lock. Reset when the account locks or a sign-in succeeds.</summary>
+    public int FailedLoginCount { get; set; }
+
+    /// <summary>While this is in the future, sign-in is refused even with the right password.</summary>
+    public DateTime? LockedUntil { get; set; }
+
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 }

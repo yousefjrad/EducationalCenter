@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using EducationalCenter.Application;
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Infrastructure;
@@ -37,6 +37,8 @@ public sealed class AppFixture : IAsyncLifetime
 
     public FakeClock Clock { get; } = new();
 
+    public FakeSecurityEvents Security { get; } = new();
+
     public FakeCurrentUser CurrentUser { get; } = new();
 
     public AsyncServiceScope NewScope() => _provider!.CreateAsyncScope();
@@ -67,6 +69,7 @@ public sealed class AppFixture : IAsyncLifetime
         services.AddSingleton<IConfiguration>(configuration);
         services.AddApplication();
         services.AddInfrastructure(configuration);
+        services.AddSingleton<ISecurityEventLogger>(Security);
         services.RemoveAll<IClock>();
         services.AddSingleton<IClock>(Clock);
         services.RemoveAll<ICurrentUser>();
