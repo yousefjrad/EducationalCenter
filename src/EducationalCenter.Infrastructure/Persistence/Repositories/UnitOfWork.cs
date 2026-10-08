@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Application.Common.Interfaces.Repositories;
 
@@ -57,6 +58,12 @@ internal sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
     public IAuditLogRepository AuditLogs => _auditLogs ??= new AuditLogRepository(db);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
+
+    /// <summary>Takes an update lock on the section row until the transaction ends, so concurrent seat checks run one after another.</summary>
+    public Task LockSectionAsync(int sectionId, CancellationToken ct = default) =>
+        db.Database
+            .SqlQuery<int>($"SELECT [Id] AS [Value] FROM [Sections] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {sectionId}")
+            .ToListAsync(ct);
 
     public Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken ct = default) =>
         ExecuteInTransactionAsync<bool>(async () =>

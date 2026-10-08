@@ -31,6 +31,9 @@ public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsPr
     {
         return uow.ExecuteInTransactionAsync(async () =>
         {
+            // Serializes concurrent enrollments of one section so the last seat cannot be sold twice.
+            await uow.LockSectionAsync(request.SectionId, ct);
+
             var student = await uow.Students.GetByIdAsync(request.StudentId, ct)
                 ?? throw new NotFoundException(nameof(Student), request.StudentId);
             if (!student.IsActive)
@@ -86,6 +89,9 @@ public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsPr
 
             if (enrollment.Status != EnrollmentStatus.Pending)
                 throw new ConflictException("Only pending enrollments can be confirmed.");
+
+            // Same lock as in CreateAsync: an expired hold is re-checked against the seats taken right now.
+            await uow.LockSectionAsync(enrollment.SectionId, ct);
 
             EnrollmentRules.EnsureSectionAccepts(enrollment.Section);
 
@@ -145,6 +151,9 @@ public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsPr
 
             if (request.TargetSectionId == source.SectionId)
                 throw new ConflictException("The target section is the same as the current section.");
+
+            // The target section gains a student, so its seats are checked under the same lock.
+            await uow.LockSectionAsync(request.TargetSectionId, ct);
 
             var target = await uow.Sections.GetWithDetailsAsync(request.TargetSectionId, ct)
                 ?? throw new NotFoundException(nameof(Section), request.TargetSectionId);

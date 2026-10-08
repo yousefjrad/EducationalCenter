@@ -30,6 +30,9 @@ public interface IUnitOfWork
     IAuditLogRepository AuditLogs { get; }
     // More repositories are added here as later features need them.
 
+    /// <summary>Takes an update lock on the section row until the current transaction ends, so concurrent seat checks run one after another.</summary>
+    Task LockSectionAsync(int sectionId, CancellationToken ct = default);
+
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 
     /// <summary>Runs the action in one DB transaction (payments, enrollment...). Rolls back on exception.</summary>
