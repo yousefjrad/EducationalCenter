@@ -71,11 +71,20 @@ public sealed class UserService(
 
         var sessionsMustEnd = (user.IsActive && !request.IsActive) || user.RoleId != role.Id;
 
+        var reactivated = !user.IsActive && request.IsActive;
+
         user.FullName = request.FullName.Trim();
         user.Email = email;
         user.RoleId = role.Id;
         user.Role = role;
         user.IsActive = request.IsActive;
+
+        // Reactivating an account also ends any failed-sign-in lock.
+        if (reactivated)
+        {
+            user.FailedLoginCount = 0;
+            user.LockedUntil = null;
+        }
 
         if (sessionsMustEnd)
             await RefreshTokenRevoker.RevokeAllAsync(uow, user.Id, clock.UtcNow, ct);
@@ -84,9 +93,24 @@ public sealed class UserService(
         return user.ToDto();
     }
 
+    public async Task<UserDto> UnlockAsync(int id, CancellationToken ct = default)
+    {
+        var user = await uow.Users.GetWithRoleAsync(id, ct) ?? throw new NotFoundException(nameof(User), id);
+
+        user.FailedLoginCount = 0;
+        user.LockedUntil = null;
+        await uow.SaveChangesAsync(ct);
+
+        return user.ToDto();
+    }
+
     public async Task ResetPasswordAsync(int id, ResetPasswordRequest request, CancellationToken ct = default)
     {
         var user = await uow.Users.GetWithRoleAsync(id, ct) ?? throw new NotFoundException(nameof(User), id);
+
+        // A new password also ends any failed-sign-in lock.
+        user.FailedLoginCount = 0;
+        user.LockedUntil = null;
 
         user.PasswordHash = hasher.Hash(request.NewPassword);
         await RefreshTokenRevoker.RevokeAllAsync(uow, user.Id, clock.UtcNow, ct);

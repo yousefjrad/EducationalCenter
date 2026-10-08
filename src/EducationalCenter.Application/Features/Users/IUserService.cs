@@ -15,4 +15,7 @@ public interface IUserService
     Task<UserDto> UpdateAsync(int id, UpdateUserRequest request, CancellationToken ct = default);
 
     Task ResetPasswordAsync(int id, ResetPasswordRequest request, CancellationToken ct = default);
+
+    /// <summary>Clears a failed-sign-in lock now instead of waiting for it to expire.</summary>
+    Task<UserDto> UnlockAsync(int id, CancellationToken ct = default);
 }

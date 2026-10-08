@@ -7,7 +7,8 @@ public sealed record UserDto(
     int RoleId,
     string RoleName,
     bool IsActive,
-    DateTime? LastLoginAt);
+    DateTime? LastLoginAt,
+    DateTime? LockedUntil);
 
 public sealed record CreateUserRequest(string FullName, string Email, string Password, int RoleId);
 
