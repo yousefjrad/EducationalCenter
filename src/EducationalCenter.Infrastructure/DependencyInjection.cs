@@ -53,8 +53,8 @@ public static class DependencyInjection
         services.AddScoped<IReceiptNumberGenerator, ReceiptNumberGenerator>();
 
         // PDF is parked (docs/PDF.md): these stand-ins report "not installed" instead of failing the build.
-        services.AddSingleton<IReceiptPdfGenerator, UnavailableReceiptPdfGenerator>();
-        services.AddSingleton<ICertificatePdfGenerator, UnavailableCertificatePdfGenerator>();
+        services.AddSingleton<IReceiptPdfGenerator, QuestPdfReceiptGenerator>();
+        services.AddSingleton<ICertificatePdfGenerator, QuestPdfCertificateGenerator>();
         services.AddSingleton<IReportExporter, ReportExporter>();
         services.AddSingleton<IExcelService, ExcelService>();
 

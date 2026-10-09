@@ -27,45 +27,60 @@ internal sealed class QuestPdfCertificateGenerator : ICertificatePdfGenerator
         return Document.Create(container => container.Page(page =>
         {
             page.Size(PageSizes.A4.Landscape());
-            page.Margin(30);
+            page.Margin(20);
             if (rtl)
                 page.ContentFromRightToLeft();
-            page.DefaultTextStyle(t => t.FontFamily(PdfSetup.FontFamily));
+            page.DefaultTextStyle(t => t.FontFamily(PdfSetup.FontFamily).FontColor(PdfTheme.Ink));
 
-            page.Content().Border(4).BorderColor(Colors.Blue.Darken3).Padding(30).Column(col =>
-            {
-                col.Spacing(14);
-
-                if (hasLogo)
-                    col.Item().AlignCenter().Height(70).Image(model.LogoPath!).FitArea();
-
-                col.Item().AlignCenter().Text(model.CenterName).FontSize(26).Bold();
-
-                col.Item().AlignCenter().Text(L("شهادة إتمام", "Certificate of Completion"))
-                    .FontSize(32).Bold().FontColor(Colors.Blue.Darken3);
-
-                col.Item().PaddingVertical(20).Text(text =>
+            page.Content().ExtendVertical()
+                .Border(3).BorderColor(PdfTheme.Navy).Padding(5)
+                .Border(1).BorderColor(PdfTheme.Gold).PaddingVertical(22).PaddingHorizontal(40)
+                .Column(col =>
                 {
-                    text.AlignCenter();
-                    text.Span(model.Body).FontSize(20).LineHeight(1.5f);
-                });
+                    col.Spacing(10);
 
-                col.Item().PaddingTop(30).Row(row =>
-                {
-                    row.RelativeItem().Column(c =>
+                    if (hasLogo)
+                        col.Item().AlignCenter().Height(60).Image(model.LogoPath!).FitArea();
+
+                    col.Item().AlignCenter().Text(model.CenterName).FontSize(22).Bold().FontColor(PdfTheme.Navy);
+                    col.Item().AlignCenter().Width(120).Height(2).Background(PdfTheme.Gold);
+
+                    col.Item().PaddingTop(8).AlignCenter()
+                        .Text(L(PdfText.CertificateTitle, "Certificate of Completion"))
+                        .FontSize(38).Bold().FontColor(PdfTheme.Navy);
+
+                    col.Item().PaddingVertical(14).Text(text =>
                     {
-                        c.Item().AlignCenter().Text($"{L("رقم الشهادة", "Certificate no.")}: {model.CertificateNumber}");
-                        c.Item().AlignCenter().Text($"{L("التاريخ", "Date")}: {date}");
+                        text.AlignCenter();
+                        text.Span(model.Body).FontSize(19).LineHeight(1.6f);
                     });
 
-                    row.RelativeItem().Column(c =>
+                    col.Item().PaddingTop(10).Row(row =>
                     {
-                        c.Item().PaddingTop(20).LineHorizontal(1);
-                        c.Item().AlignCenter().Text(model.SignerName).Bold();
-                        c.Item().AlignCenter().Text(model.SignerTitle);
+                        row.RelativeItem().AlignMiddle().Column(info =>
+                        {
+                            info.Spacing(4);
+                            info.Item().AlignCenter().Text($"{L(PdfText.CertificateNumber, "Certificate no.")}: {model.CertificateNumber}")
+                                .FontSize(11).FontColor(PdfTheme.Muted);
+                            info.Item().AlignCenter().Text($"{L(PdfText.Date, "Date")}: {date}")
+                                .FontSize(11).FontColor(PdfTheme.Muted);
+                        });
+
+                        row.RelativeItem().AlignMiddle().AlignCenter().Width(80).Height(80)
+                            .Border(2).BorderColor(PdfTheme.Gold).CornerRadius(40)
+                            .Padding(6).AlignMiddle().AlignCenter()
+                            .Text(L(PdfText.Approved, "APPROVED")).FontSize(12).Bold().FontColor(PdfTheme.Gold);
+
+                        row.RelativeItem().AlignMiddle().Column(sign =>
+                        {
+                            sign.Spacing(4);
+                            sign.Item().Height(34);
+                            sign.Item().Height(1).Background(PdfTheme.Navy);
+                            sign.Item().AlignCenter().Text(model.SignerName).Bold().FontColor(PdfTheme.Navy);
+                            sign.Item().AlignCenter().Text(model.SignerTitle).FontSize(10).FontColor(PdfTheme.Muted);
+                        });
                     });
                 });
-            });
         })).GeneratePdf();
     }
 }

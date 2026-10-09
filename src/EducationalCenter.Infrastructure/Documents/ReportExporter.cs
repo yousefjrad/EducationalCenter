@@ -60,6 +60,5 @@ internal sealed class ReportExporter : IReportExporter
         return stream.ToArray();
     }
 
-    public byte[] ToPdf(ReportTable table) =>
-        throw new FeatureUnavailableException("PDF export is not installed in this version yet. Excel export is available.");
+    public byte[] ToPdf(ReportTable table) => QuestPdfReportRenderer.Render(table);
 }
