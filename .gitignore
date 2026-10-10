@@ -4,3 +4,5 @@ obj/
 *.user
 logs/
 appsettings.Development.json
+ctx-*.txt
+dup-check*.txt
