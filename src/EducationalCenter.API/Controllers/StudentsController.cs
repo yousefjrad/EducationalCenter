@@ -1,14 +1,15 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EducationalCenter.API.Authorization;
 using EducationalCenter.Application.Common.Models;
 using EducationalCenter.Application.Features.Students;
+using EducationalCenter.Application.Features.Users;
 using EducationalCenter.Domain.Constants;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EducationalCenter.API.Controllers;
 
 [ApiVersion("1.0")]
-public sealed class StudentsController(IStudentService service) : ApiControllerBase
+public sealed class StudentsController(IStudentService service, IStudentAccountService accounts) : ApiControllerBase
 {
     [HttpGet]
     [HasPermission(Permissions.Students.View)]
@@ -40,4 +41,11 @@ public sealed class StudentsController(IStudentService service) : ApiControllerB
         await service.DeleteAsync(id, ct);
         return NoContent();
     }
+
+    /// <summary>Creates a sign-in account (role "Student") so the student can use the student portal.</summary>
+    [HttpPost("{id:int}/account")]
+    [HasPermission(Permissions.Students.Update)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateAccount(int id, CreateStudentAccountRequest request, CancellationToken ct) =>
+        StatusCode(StatusCodes.Status201Created, await accounts.CreateAsync(id, request, ct));
 }

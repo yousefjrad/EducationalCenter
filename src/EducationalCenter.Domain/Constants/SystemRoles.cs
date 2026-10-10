@@ -4,6 +4,7 @@ public static class SystemRoles
 {
     public const string Admin = "Admin";
     public const string Receptionist = "Receptionist";
+    public const string Student = "Student";
 
     /// <summary>Admin gets everything.</summary>
     public static IReadOnlyList<string> AdminPermissions => Permissions.All;

@@ -33,6 +33,7 @@ public static class DatabaseInitializer
 
         await SeedPermissionsAsync(db, ct);
         await SeedRolesAsync(db, ct);
+        await SeedStudentRoleAsync(db, ct);
         await SeedSettingsAsync(db, ct);
         await SeedCertificateTemplatesAsync(db, ct);
         await SeedFirstAdminAsync(db, hasher, configuration, ct);
@@ -87,6 +88,22 @@ public static class DatabaseInitializer
 
             db.Roles.Add(receptionist);
         }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>The student portal role: no staff permissions, the portal only shows the student's own data.</summary>
+    private static async Task SeedStudentRoleAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.Roles.AnyAsync(r => r.Name == SystemRoles.Student, ct))
+            return;
+
+        db.Roles.Add(new Role
+        {
+            Name = SystemRoles.Student,
+            Description = "Student portal: sees only their own courses, attendance, grades, payments and certificates",
+            IsSystem = true
+        });
 
         await db.SaveChangesAsync(ct);
     }
