@@ -1,4 +1,5 @@
 using EducationalCenter.Application.Common.Interfaces;
+using EducationalCenter.Application.Features.StudentPortal;
 using EducationalCenter.Infrastructure.Backups;
 using EducationalCenter.Infrastructure.BackgroundJobs;
 using EducationalCenter.Infrastructure.Common;
@@ -51,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ISettingsProvider, DatabaseSettingsProvider>();
         services.AddScoped<IReceiptNumberGenerator, ReceiptNumberGenerator>();
+        services.AddScoped<IStudentPortalReader, StudentPortalReader>();
 
         // PDF is parked (docs/PDF.md): these stand-ins report "not installed" instead of failing the build.
         services.AddSingleton<IReceiptPdfGenerator, QuestPdfReceiptGenerator>();

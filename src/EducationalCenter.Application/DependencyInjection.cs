@@ -21,6 +21,7 @@ using EducationalCenter.Application.Features.Settings;
 using EducationalCenter.Application.Features.Rooms;
 using EducationalCenter.Application.Features.Sections;
 using EducationalCenter.Application.Features.Students;
+using EducationalCenter.Application.Features.StudentPortal;
 using EducationalCenter.Application.Features.TrainerPayrolls;
 using EducationalCenter.Application.Features.Trainers;
 using EducationalCenter.Application.Features.Users;
@@ -44,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<ITrainerService, TrainerService>();
         services.AddScoped<IStudentService, StudentService>();
         services.AddScoped<IStudentAccountService, StudentAccountService>();
+        services.AddScoped<IStudentPortalService, StudentPortalService>();
         services.AddScoped<ISectionService, SectionService>();
         services.AddScoped<IClassSessionService, ClassSessionService>();
         services.AddScoped<IEnrollmentService, EnrollmentService>();
