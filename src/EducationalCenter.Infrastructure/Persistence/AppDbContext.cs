@@ -27,6 +27,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<PaymentPlan> PaymentPlans => Set<PaymentPlan>();
     public DbSet<Installment> Installments => Set<Installment>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentIntent> PaymentIntents => Set<PaymentIntent>();
     public DbSet<Receipt> Receipts => Set<Receipt>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<TrainerPayroll> TrainerPayrolls => Set<TrainerPayroll>();

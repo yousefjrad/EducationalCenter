@@ -23,6 +23,7 @@ using EducationalCenter.Application.Features.Sections;
 using EducationalCenter.Application.Features.Students;
 using EducationalCenter.Application.Features.StudentPortal;
 using EducationalCenter.Application.Features.Registration;
+using EducationalCenter.Application.Features.OnlinePayments;
 using EducationalCenter.Application.Features.PublicCatalog;
 using EducationalCenter.Application.Features.TrainerPayrolls;
 using EducationalCenter.Application.Features.Trainers;
@@ -50,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IStudentPortalService, StudentPortalService>();
         services.AddScoped<IStudentBookingService, StudentBookingService>();
         services.AddScoped<ISelfRegistrationService, SelfRegistrationService>();
+        services.AddScoped<IOnlinePaymentService, OnlinePaymentService>();
         services.AddScoped<IPublicCatalogService, PublicCatalogService>();
         services.AddScoped<ISectionService, SectionService>();
         services.AddScoped<IClassSessionService, ClassSessionService>();

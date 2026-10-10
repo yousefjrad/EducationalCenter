@@ -30,11 +30,13 @@ public sealed class PaymentService(
         return new PagedResult<PaymentDto>(items.Select(p => p.ToDto()).ToList(), total, query.Page, query.PageSize);
     }
 
-    public Task<PaymentDto> RecordAsync(RecordPaymentRequest request, CancellationToken ct = default)
+    public Task<PaymentDto> RecordAsync(RecordPaymentRequest request, CancellationToken ct = default) =>
+        RecordForUserAsync(request, currentUser.RequireUserId(), ct);
+
+    public Task<PaymentDto> RecordForUserAsync(RecordPaymentRequest request, int userId, CancellationToken ct = default)
     {
         return uow.ExecuteInTransactionAsync(async () =>
         {
-            var userId = currentUser.RequireUserId();
 
             var plan = await uow.PaymentPlans.GetByInstallmentIdAsync(request.InstallmentId, ct)
                 ?? throw new NotFoundException("Installment", request.InstallmentId);

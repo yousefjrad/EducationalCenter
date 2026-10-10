@@ -13,6 +13,9 @@ public interface IPaymentService
     /// </summary>
     Task<PaymentDto> RecordAsync(RecordPaymentRequest request, CancellationToken ct = default);
 
+    /// <summary>Same as <see cref="RecordAsync"/> for a given user: online payments confirmed by a gateway or by the student.</summary>
+    Task<PaymentDto> RecordForUserAsync(RecordPaymentRequest request, int userId, CancellationToken ct = default);
+
     /// <summary>Admin only (API policy). The payment is kept and marked Cancelled; it is never deleted.</summary>
     Task<PaymentDto> CancelAsync(int id, CancelPaymentRequest request, CancellationToken ct = default);
 }
