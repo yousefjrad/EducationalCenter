@@ -2,8 +2,9 @@ using EducationalCenter.Domain.Common;
 
 namespace EducationalCenter.Domain.Entities;
 
-public class Grade : BaseEntity
+public class Grade : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public int EnrollmentId { get; set; }
     public Enrollment Enrollment { get; set; } = null!;
 

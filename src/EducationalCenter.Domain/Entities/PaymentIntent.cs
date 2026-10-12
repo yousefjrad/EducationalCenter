@@ -7,8 +7,9 @@ namespace EducationalCenter.Domain.Entities;
 /// A student's request to pay (part of) an installment online. It becomes a real Payment with a receipt
 /// only when the payment is confirmed. Never deleted.
 /// </summary>
-public class PaymentIntent : BaseEntity
+public class PaymentIntent : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public int InstallmentId { get; set; }
     public Installment Installment { get; set; } = null!;
 

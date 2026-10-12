@@ -30,6 +30,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<int>("ClassSessionId")
                         .HasColumnType("int");
 
@@ -52,6 +55,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("EnrollmentId");
 
@@ -76,6 +81,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -103,6 +111,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("CreatedAt");
 
                     b.HasIndex("UserId");
@@ -112,6 +122,134 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.Branch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Governorate")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Branches");
+                });
+
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.BranchCourse", b =>
+                {
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("CourseId", "BranchId");
+
+                    b.HasIndex("BranchId");
+
+                    b.ToTable("BranchCourses");
+                });
+
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.Budget", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("ApprovedAmountSyp")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DecidedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateOnly>("Month")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("RequestedAmountSyp")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("RequestedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecidedByUserId");
+
+                    b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("BranchId", "Month")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("Budgets");
+                });
+
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Certificate", b =>
                 {
                     b.Property<int>("Id")
@@ -119,6 +257,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CertificateNumber")
                         .IsRequired()
@@ -151,6 +292,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("CertificateNumber")
                         .IsUnique();
@@ -228,6 +371,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -263,6 +409,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("RoomId", "Date");
 
@@ -339,6 +487,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -368,6 +519,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("TransferredFromEnrollmentId");
 
                     b.HasIndex("SectionId", "Status");
@@ -394,6 +547,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("AmountInSyp")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -429,6 +585,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("Category");
 
                     b.HasIndex("ExpenseDate");
@@ -445,6 +603,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -474,6 +635,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("EnrollmentId")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
@@ -494,6 +657,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -517,6 +683,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("PaymentPlanId", "Number")
                         .IsUnique()
@@ -542,6 +710,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("AmountPaid")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CancelReason")
                         .HasMaxLength(500)
@@ -577,6 +748,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("InstallmentId");
 
                     b.HasIndex("PaidAt");
@@ -599,6 +772,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("AmountInSyp")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
@@ -651,6 +827,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("InstallmentId");
 
                     b.HasIndex("Reference")
@@ -668,6 +846,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -692,6 +873,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("EnrollmentId")
                         .IsUnique()
@@ -731,6 +914,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -755,6 +941,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("IssuedByUserId");
 
@@ -863,6 +1051,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
@@ -893,6 +1084,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("Name")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
@@ -907,6 +1100,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
@@ -951,6 +1147,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("RoomId");
 
@@ -1038,6 +1236,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -1064,6 +1265,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("PhoneNumber");
 
@@ -1127,6 +1330,21 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.ToTable("Trainers");
                 });
 
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.TrainerBranch", b =>
+                {
+                    b.Property<int>("TrainerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TrainerId", "BranchId");
+
+                    b.HasIndex("BranchId");
+
+                    b.ToTable("TrainerBranches");
+                });
+
             modelBuilder.Entity("EducationalCenter.Domain.Entities.TrainerPayroll", b =>
                 {
                     b.Property<int>("Id")
@@ -1142,6 +1360,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("AmountInSyp")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CalculationMethod")
                         .IsRequired()
@@ -1184,6 +1405,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("PaidByUserId");
 
                     b.HasIndex("Status");
@@ -1200,6 +1423,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1242,6 +1468,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
@@ -1261,6 +1489,9 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("AddedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1288,6 +1519,8 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("PromotedEnrollmentId");
 
                     b.HasIndex("StudentId", "SectionId");
@@ -1299,6 +1532,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Attendance", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.ClassSession", "ClassSession")
                         .WithMany("Attendances")
                         .HasForeignKey("ClassSessionId")
@@ -1326,6 +1565,11 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.AuditLog", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("EducationalCenter.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1335,8 +1579,59 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.BranchCourse", b =>
+                {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EducationalCenter.Domain.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.Budget", b =>
+                {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EducationalCenter.Domain.Entities.User", "DecidedByUser")
+                        .WithMany()
+                        .HasForeignKey("DecidedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EducationalCenter.Domain.Entities.User", "RequestedByUser")
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("DecidedByUser");
+
+                    b.Navigation("RequestedByUser");
+                });
+
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Certificate", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Enrollment", "Enrollment")
                         .WithOne("Certificate")
                         .HasForeignKey("EducationalCenter.Domain.Entities.Certificate", "EnrollmentId")
@@ -1356,6 +1651,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.ClassSession", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Room", "Room")
                         .WithMany("ClassSessions")
                         .HasForeignKey("RoomId")
@@ -1383,6 +1684,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Enrollment", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Section", "Section")
                         .WithMany("Enrollments")
                         .HasForeignKey("SectionId")
@@ -1409,6 +1716,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Expense", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.User", "RecordedByUser")
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
@@ -1420,6 +1733,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Grade", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Enrollment", "Enrollment")
                         .WithOne("Grade")
                         .HasForeignKey("EducationalCenter.Domain.Entities.Grade", "EnrollmentId")
@@ -1439,6 +1758,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Installment", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.PaymentPlan", "PaymentPlan")
                         .WithMany("Installments")
                         .HasForeignKey("PaymentPlanId")
@@ -1450,6 +1775,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Payment", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Installment", "Installment")
                         .WithMany("Payments")
                         .HasForeignKey("InstallmentId")
@@ -1469,6 +1800,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.PaymentIntent", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Installment", "Installment")
                         .WithMany()
                         .HasForeignKey("InstallmentId")
@@ -1488,6 +1825,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.PaymentPlan", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Enrollment", "Enrollment")
                         .WithOne("PaymentPlan")
                         .HasForeignKey("EducationalCenter.Domain.Entities.PaymentPlan", "EnrollmentId")
@@ -1499,6 +1842,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Receipt", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.User", "IssuedByUser")
                         .WithMany()
                         .HasForeignKey("IssuedByUserId")
@@ -1546,8 +1895,23 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.Room", b =>
+                {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Section", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Course", "Course")
                         .WithMany("Sections")
                         .HasForeignKey("CourseId")
@@ -1596,6 +1960,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.Student", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -1604,8 +1974,33 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EducationalCenter.Domain.Entities.TrainerBranch", b =>
+                {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EducationalCenter.Domain.Entities.Trainer", "Trainer")
+                        .WithMany()
+                        .HasForeignKey("TrainerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Trainer");
+                });
+
             modelBuilder.Entity("EducationalCenter.Domain.Entities.TrainerPayroll", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.User", "PaidByUser")
                         .WithMany()
                         .HasForeignKey("PaidByUserId")
@@ -1624,6 +2019,11 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.User", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("EducationalCenter.Domain.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
@@ -1635,6 +2035,12 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EducationalCenter.Domain.Entities.WaitingListEntry", b =>
                 {
+                    b.HasOne("EducationalCenter.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EducationalCenter.Domain.Entities.Enrollment", "PromotedEnrollment")
                         .WithMany()
                         .HasForeignKey("PromotedEnrollmentId")

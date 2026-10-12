@@ -4,8 +4,9 @@ using EducationalCenter.Domain.Enums;
 namespace EducationalCenter.Domain.Entities;
 
 /// <summary>Financial record: never hard-deleted; cancelled by changing Status.</summary>
-public class Payment : BaseEntity
+public class Payment : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public int InstallmentId { get; set; }
     public Installment Installment { get; set; } = null!;
 

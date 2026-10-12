@@ -3,8 +3,9 @@ using EducationalCenter.Domain.Enums;
 
 namespace EducationalCenter.Domain.Entities;
 
-public class Expense : BaseEntity
+public class Expense : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public string Category { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public Currency Currency { get; set; } = Currency.Syp;

@@ -2,8 +2,9 @@ using EducationalCenter.Domain.Common;
 
 namespace EducationalCenter.Domain.Entities;
 
-public class Room : BaseEntity
+public class Room : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public string Name { get; set; } = string.Empty;
     public int Capacity { get; set; }
     public string? Description { get; set; }

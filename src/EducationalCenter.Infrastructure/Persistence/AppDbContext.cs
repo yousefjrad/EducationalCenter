@@ -42,6 +42,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<CertificateTemplate> CertificateTemplates => Set<CertificateTemplate>();
     public DbSet<Setting> Settings => Set<Setting>();
 
+    // Branches
+    public DbSet<Branch> Branches => Set<Branch>();
+    public DbSet<TrainerBranch> TrainerBranches => Set<TrainerBranch>();
+    public DbSet<BranchCourse> BranchCourses => Set<BranchCourse>();
+    public DbSet<Budget> Budgets => Set<Budget>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         // Money by default; exchange rates and scores override this in their configurations.
@@ -51,11 +57,60 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        ConfigureBranches(modelBuilder);
 
         ApplySoftDeleteFilters(modelBuilder);
         ConfigureDeleteBehaviors(modelBuilder);
     }
 
+    /// <summary>Branches, their links, budgets, and a foreign key from every branch-owned record to its branch.</summary>
+    private static void ConfigureBranches(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Branch>(b =>
+        {
+            b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            b.Property(x => x.Code).HasMaxLength(5).IsRequired();
+            b.Property(x => x.Governorate).HasMaxLength(100);
+            b.Property(x => x.Address).HasMaxLength(250);
+            b.Property(x => x.Phone).HasMaxLength(30);
+            b.HasIndex(x => x.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<TrainerBranch>(b =>
+        {
+            b.HasKey(x => new { x.TrainerId, x.BranchId });
+            b.HasOne(x => x.Trainer).WithMany().HasForeignKey(x => x.TrainerId);
+            b.HasOne(x => x.Branch).WithMany().HasForeignKey(x => x.BranchId);
+        });
+
+        modelBuilder.Entity<BranchCourse>(b =>
+        {
+            b.HasKey(x => new { x.CourseId, x.BranchId });
+            b.HasOne(x => x.Course).WithMany().HasForeignKey(x => x.CourseId);
+            b.HasOne(x => x.Branch).WithMany().HasForeignKey(x => x.BranchId);
+        });
+
+        modelBuilder.Entity<Budget>(b =>
+        {
+            b.Property(x => x.Notes).HasMaxLength(500);
+            b.HasIndex(x => new { x.BranchId, x.Month }).IsUnique().HasFilter("[IsDeleted] = 0");
+            b.HasOne(x => x.RequestedByUser).WithMany().HasForeignKey(x => x.RequestedByUserId);
+            b.HasOne(x => x.DecidedByUser).WithMany().HasForeignKey(x => x.DecidedByUserId);
+        });
+
+        foreach (var type in modelBuilder.Model.GetEntityTypes()
+                     .Where(t => typeof(IBranchOwned).IsAssignableFrom(t.ClrType) && t.ClrType != typeof(Budget))
+                     .Select(t => t.ClrType)
+                     .ToList())
+        {
+            var builder = modelBuilder.Entity(type);
+            builder.HasOne(typeof(Branch)).WithMany().HasForeignKey("BranchId").OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex("BranchId");
+        }
+
+        modelBuilder.Entity<User>().HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<AuditLog>().HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+    }
     /// <summary>Every BaseEntity hides its soft-deleted rows from all queries.</summary>
     private static void ApplySoftDeleteFilters(ModelBuilder modelBuilder)
     {

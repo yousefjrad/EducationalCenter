@@ -2,8 +2,9 @@ using EducationalCenter.Domain.Common;
 
 namespace EducationalCenter.Domain.Entities;
 
-public class Receipt : BaseEntity
+public class Receipt : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public int PaymentId { get; set; }
     public Payment Payment { get; set; } = null!;
 

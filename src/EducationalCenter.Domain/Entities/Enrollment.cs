@@ -3,8 +3,9 @@ using EducationalCenter.Domain.Enums;
 
 namespace EducationalCenter.Domain.Entities;
 
-public class Enrollment : BaseEntity
+public class Enrollment : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public int StudentId { get; set; }
     public Student Student { get; set; } = null!;
     public int SectionId { get; set; }

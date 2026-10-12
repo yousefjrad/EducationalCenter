@@ -2,8 +2,9 @@ using EducationalCenter.Domain.Common;
 
 namespace EducationalCenter.Domain.Entities;
 
-public class Student : BaseEntity
+public class Student : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public string FullName { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;

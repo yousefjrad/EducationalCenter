@@ -3,6 +3,7 @@ namespace EducationalCenter.Domain.Entities;
 /// <summary>Append-only. Financial operations only.</summary>
 public class AuditLog
 {
+    public int? BranchId { get; set; }
     public int Id { get; set; }
     public int UserId { get; set; }
     public User User { get; set; } = null!;

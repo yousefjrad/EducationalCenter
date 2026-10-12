@@ -2,8 +2,9 @@ using EducationalCenter.Domain.Common;
 
 namespace EducationalCenter.Domain.Entities;
 
-public class Attendance : BaseEntity
+public class Attendance : BaseEntity, IBranchOwned
 {
+    public int BranchId { get; set; } = 1;
     public int ClassSessionId { get; set; }
     public ClassSession ClassSession { get; set; } = null!;
     public int EnrollmentId { get; set; }
