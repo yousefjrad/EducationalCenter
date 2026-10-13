@@ -128,6 +128,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranch
                         ?? throw new RequestValidationException("branch", "Select a branch first: this record must belong to one branch (send the X-Branch-Id header).");
                 }
             }
+            else if (entry.Entity is Trainer newTrainer && scoped is > 0)
+            {
+                TrainerBranches.Add(new TrainerBranch { Trainer = newTrainer, BranchId = scoped.Value });
+            }
+            else if (entry.Entity is Course newCourse && scoped is > 0)
+            {
+                BranchCourses.Add(new BranchCourse { Course = newCourse, BranchId = scoped.Value, IsActive = true });
+            }
             else if (entry.Entity is AuditLog log && log.BranchId is null && scoped is > 0)
             {
                 log.BranchId = scoped;

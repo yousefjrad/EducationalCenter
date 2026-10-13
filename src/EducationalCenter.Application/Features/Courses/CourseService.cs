@@ -9,24 +9,22 @@ namespace EducationalCenter.Application.Features.Courses;
 /// Request-shape validation (FluentValidation) happens before this service, in an API filter.
 /// Rules that need the database live here.
 /// </remarks>
-public sealed class CourseService(IUnitOfWork uow) : ICourseService
+public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext) : ICourseService
 {
-    public async Task<CourseDto> GetByIdAsync(int id, CancellationToken ct = default)
-    {
-        var course = await uow.Courses.GetByIdAsync(id, ct)
-            ?? throw new NotFoundException(nameof(Course), id);
-        return course.ToDto();
-    }
+    public async Task<CourseDto> GetByIdAsync(int id, CancellationToken ct = default) =>
+        (await FindAsync(id, ct)).ToDto();
 
     public async Task<PagedResult<CourseDto>> ListAsync(CourseListQuery query, CancellationToken ct = default)
     {
-        var (items, total) = await uow.Courses.SearchAsync(
-            query.Search?.Trim(), query.IsActive, query.Page, query.PageSize, ct);
+        var (items, total) = branchContext.BranchId is int branchId
+            ? await uow.Courses.SearchInBranchAsync(query.Search?.Trim(), query.IsActive, branchId, query.Page, query.PageSize, ct)
+            : await uow.Courses.SearchAsync(query.Search?.Trim(), query.IsActive, query.Page, query.PageSize, ct);
 
         var dtos = items.Select(c => c.ToDto()).ToList();
         return new PagedResult<CourseDto>(dtos, total, query.Page, query.PageSize);
     }
 
+    /// <remarks>A course created inside a branch is enabled for it automatically (see AppDbContext).</remarks>
     public async Task<CourseDto> CreateAsync(CreateCourseRequest request, CancellationToken ct = default)
     {
         var code = NormalizeCode(request.Code);
@@ -51,8 +49,7 @@ public sealed class CourseService(IUnitOfWork uow) : ICourseService
 
     public async Task<CourseDto> UpdateAsync(int id, UpdateCourseRequest request, CancellationToken ct = default)
     {
-        var course = await uow.Courses.GetByIdAsync(id, ct)
-            ?? throw new NotFoundException(nameof(Course), id);
+        var course = await FindAsync(id, ct);
 
         var code = NormalizeCode(request.Code);
         if (await uow.Courses.CodeExistsAsync(code, id, ct))
@@ -73,14 +70,24 @@ public sealed class CourseService(IUnitOfWork uow) : ICourseService
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        var course = await uow.Courses.GetByIdAsync(id, ct)
-            ?? throw new NotFoundException(nameof(Course), id);
+        var course = await FindAsync(id, ct);
 
         if (await uow.Courses.HasSectionsAsync(id, ct))
             throw new ConflictException("This course has sections and cannot be deleted. Deactivate it instead.");
 
         uow.Courses.Remove(course);
         await uow.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Inside a branch, a course the branch does not offer is reported as not found.</summary>
+    private async Task<Course> FindAsync(int id, CancellationToken ct)
+    {
+        var course = await uow.Courses.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Course), id);
+
+        if (branchContext.BranchId is int branchId && !await uow.BranchLinks.IsCourseLinkedAsync(id, branchId, ct))
+            throw new NotFoundException(nameof(Course), id);
+
+        return course;
     }
 
     private static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();

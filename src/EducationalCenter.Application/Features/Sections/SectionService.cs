@@ -43,6 +43,11 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionServ
         var trainer = await GetActiveTrainerAsync(request.TrainerId, ct);
         var room = await GetActiveRoomAsync(request.RoomId, ct);
 
+        if (!await uow.BranchLinks.IsCourseOfferedAsync(course.Id, room.BranchId, ct))
+            throw new ConflictException("This course is not offered by the branch.");
+        if (!await uow.BranchLinks.IsTrainerInBranchAsync(trainer.Id, room.BranchId, ct))
+            throw new ConflictException("This trainer does not teach at this branch.");
+
         if (request.Capacity > room.Capacity)
             throw new ConflictException($"Capacity ({request.Capacity}) exceeds the room capacity ({room.Capacity}).");
 
@@ -86,6 +91,9 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionServ
 
         var trainer = trainerChanged ? await GetActiveTrainerAsync(request.TrainerId, ct) : section.Trainer;
         var room = roomChanged ? await GetActiveRoomAsync(request.RoomId, ct) : section.Room;
+
+        if (trainerChanged && !await uow.BranchLinks.IsTrainerInBranchAsync(trainer.Id, section.BranchId, ct))
+            throw new ConflictException("This trainer does not teach at this branch.");
 
         if (request.Capacity > room.Capacity)
             throw new ConflictException($"Capacity ({request.Capacity}) exceeds the room capacity ({room.Capacity}).");

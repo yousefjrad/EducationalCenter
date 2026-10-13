@@ -13,6 +13,20 @@ internal sealed class CourseRepository(AppDbContext context) : Repository<Course
     public Task<bool> HasSectionsAsync(int courseId, CancellationToken ct = default) =>
         Db.Sections.AnyAsync(s => s.CourseId == courseId, ct);
 
+    public Task<(IReadOnlyList<Course> Items, int TotalCount)> SearchInBranchAsync(
+        string? search, bool? isActive, int branchId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = Set.AsNoTracking()
+            .Where(c => Db.BranchCourses.Any(x => x.CourseId == c.Id && x.BranchId == branchId));
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(c => c.Name.Contains(search) || c.Code.Contains(search));
+        if (isActive.HasValue)
+            query = query.Where(c => c.IsActive == isActive.Value);
+
+        return query.OrderBy(c => c.Name).ThenBy(c => c.Id).ToPageAsync(page, pageSize, ct);
+    }
+
     public Task<Course?> GetByCodeAsync(string code, CancellationToken ct = default) =>
         Set.AsNoTracking().FirstOrDefaultAsync(c => c.Code == code, ct);
 
@@ -62,6 +76,22 @@ internal sealed class TrainerRepository(AppDbContext context) : Repository<Train
         await Db.Sections.AnyAsync(s => s.TrainerId == trainerId, ct)
         || await Db.ClassSessions.AnyAsync(s => s.TrainerId == trainerId, ct)
         || await Db.TrainerPayrolls.AnyAsync(p => p.TrainerId == trainerId, ct);
+
+    public Task<(IReadOnlyList<Trainer> Items, int TotalCount)> SearchInBranchAsync(
+        string? search, bool? isActive, int branchId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = Set.AsNoTracking()
+            .Where(t => Db.TrainerBranches.Any(x => x.TrainerId == t.Id && x.BranchId == branchId));
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(t => t.FullName.Contains(search)
+                                     || t.PhoneNumber.Contains(search)
+                                     || (t.Specialty != null && t.Specialty.Contains(search)));
+        if (isActive.HasValue)
+            query = query.Where(t => t.IsActive == isActive.Value);
+
+        return query.OrderBy(t => t.FullName).ThenBy(t => t.Id).ToPageAsync(page, pageSize, ct);
+    }
 
     public async Task<IReadOnlyList<Trainer>> FindActiveByNameAsync(string fullName, CancellationToken ct = default) =>
         await Set.AsNoTracking().Where(t => t.IsActive && t.FullName == fullName).ToListAsync(ct);

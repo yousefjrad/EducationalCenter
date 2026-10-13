@@ -5,21 +5,21 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Trainers;
 
-public sealed class TrainerService(IUnitOfWork uow) : ITrainerService
+public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext) : ITrainerService
 {
-    public async Task<TrainerDto> GetByIdAsync(int id, CancellationToken ct = default)
-    {
-        var trainer = await uow.Trainers.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Trainer), id);
-        return trainer.ToDto();
-    }
+    public async Task<TrainerDto> GetByIdAsync(int id, CancellationToken ct = default) =>
+        (await FindAsync(id, ct)).ToDto();
 
     public async Task<PagedResult<TrainerDto>> ListAsync(TrainerListQuery query, CancellationToken ct = default)
     {
-        var (items, total) = await uow.Trainers.SearchAsync(
-            query.Search?.Trim(), query.IsActive, query.Page, query.PageSize, ct);
+        var (items, total) = branchContext.BranchId is int branchId
+            ? await uow.Trainers.SearchInBranchAsync(query.Search?.Trim(), query.IsActive, branchId, query.Page, query.PageSize, ct)
+            : await uow.Trainers.SearchAsync(query.Search?.Trim(), query.IsActive, query.Page, query.PageSize, ct);
+
         return new PagedResult<TrainerDto>(items.Select(t => t.ToDto()).ToList(), total, query.Page, query.PageSize);
     }
 
+    /// <remarks>A trainer created inside a branch is linked to it automatically (see AppDbContext).</remarks>
     public async Task<TrainerDto> CreateAsync(CreateTrainerRequest request, CancellationToken ct = default)
     {
         var trainer = new Trainer
@@ -40,7 +40,7 @@ public sealed class TrainerService(IUnitOfWork uow) : ITrainerService
 
     public async Task<TrainerDto> UpdateAsync(int id, UpdateTrainerRequest request, CancellationToken ct = default)
     {
-        var trainer = await uow.Trainers.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Trainer), id);
+        var trainer = await FindAsync(id, ct);
 
         trainer.FullName = request.FullName.Trim();
         trainer.PhoneNumber = request.PhoneNumber.Trim();
@@ -57,12 +57,23 @@ public sealed class TrainerService(IUnitOfWork uow) : ITrainerService
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        var trainer = await uow.Trainers.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Trainer), id);
+        var trainer = await FindAsync(id, ct);
 
         if (await uow.Trainers.IsInUseAsync(id, ct))
             throw new ConflictException("This trainer has sections, sessions or payroll records and cannot be deleted. Deactivate them instead.");
 
         uow.Trainers.Remove(trainer);
         await uow.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Inside a branch, a trainer of another branch is reported as not found.</summary>
+    private async Task<Trainer> FindAsync(int id, CancellationToken ct)
+    {
+        var trainer = await uow.Trainers.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Trainer), id);
+
+        if (branchContext.BranchId is int branchId && !await uow.BranchLinks.IsTrainerInBranchAsync(id, branchId, ct))
+            throw new NotFoundException(nameof(Trainer), id);
+
+        return trainer;
     }
 }

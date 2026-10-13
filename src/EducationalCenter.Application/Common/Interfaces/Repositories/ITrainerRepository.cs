@@ -12,4 +12,8 @@ public interface ITrainerRepository : IRepository<Trainer>
 
     /// <summary>Active trainers whose full name matches (case-insensitive). More than one means the name is ambiguous.</summary>
     Task<IReadOnlyList<Trainer>> FindActiveByNameAsync(string fullName, CancellationToken ct = default);
+
+    /// <summary>Only the trainers linked to that branch.</summary>
+    Task<(IReadOnlyList<Trainer> Items, int TotalCount)> SearchInBranchAsync(
+        string? search, bool? isActive, int branchId, int page, int pageSize, CancellationToken ct = default);
 }

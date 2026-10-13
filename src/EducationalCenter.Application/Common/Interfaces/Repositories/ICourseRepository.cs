@@ -12,4 +12,8 @@ public interface ICourseRepository : IRepository<Course>
 
     /// <summary>The course with that code (codes are stored upper-case), or null.</summary>
     Task<Course?> GetByCodeAsync(string code, CancellationToken ct = default);
+
+    /// <summary>Only the courses linked to that branch.</summary>
+    Task<(IReadOnlyList<Course> Items, int TotalCount)> SearchInBranchAsync(
+        string? search, bool? isActive, int branchId, int page, int pageSize, CancellationToken ct = default);
 }
