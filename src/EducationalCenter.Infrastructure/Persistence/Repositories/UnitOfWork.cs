@@ -33,6 +33,7 @@ internal sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
     private IAuditLogRepository? _auditLogs;
     private IBranchRepository? _branches;
     private IBranchLinkRepository? _branchLinks;
+    private IBudgetRepository? _budgets;
 
     public ICourseRepository Courses => _courses ??= new CourseRepository(db);
     public IRoomRepository Rooms => _rooms ??= new RoomRepository(db);
@@ -60,6 +61,7 @@ internal sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
     public IAuditLogRepository AuditLogs => _auditLogs ??= new AuditLogRepository(db);
     public IBranchRepository Branches => _branches ??= new BranchRepository(db);
     public IBranchLinkRepository BranchLinks => _branchLinks ??= new BranchLinkRepository(db);
+    public IBudgetRepository Budgets => _budgets ??= new BudgetRepository(db);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
 

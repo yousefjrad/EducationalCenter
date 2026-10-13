@@ -29,8 +29,15 @@ public sealed class AlertService(IUnitOfWork uow, IClock clock, ICurrentUser cur
             waiting = new WaitingListAlert(rows.Count, rows.Take(MaxItems).ToList());
         }
 
-        var total = (overdue?.Count ?? 0) + (pending?.Count ?? 0) + (waiting?.Count ?? 0);
-        return new AlertsDto(overdue, pending, waiting, total);
+        BudgetOverrunAlert? budgets = null;
+        if (granted.Contains(Permissions.Budgets.View))
+        {
+            var overruns = await uow.Budgets.GetOverrunsAsync(new DateOnly(now.Year, now.Month, 1), ct);
+            budgets = new BudgetOverrunAlert(overruns.Count, overruns);
+        }
+
+        var total = (overdue?.Count ?? 0) + (pending?.Count ?? 0) + (waiting?.Count ?? 0) + (budgets?.Count ?? 0);
+        return new AlertsDto(overdue, pending, waiting, total, budgets);
     }
 
     private async Task<OverdueInstallmentsAlert> BuildOverdueAsync(DateOnly today, CancellationToken ct)

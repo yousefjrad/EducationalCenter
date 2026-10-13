@@ -1,3 +1,4 @@
+using EducationalCenter.Application.Features.Budgets;
 using EducationalCenter.Application.Features.Reports;
 
 namespace EducationalCenter.Application.Features.Alerts;
@@ -10,7 +11,8 @@ public sealed record AlertsDto(
     OverdueInstallmentsAlert? OverdueInstallments,
     PendingEnrollmentsAlert? PendingEnrollments,
     WaitingListAlert? WaitingList,
-    int TotalCount);
+    int TotalCount,
+    BudgetOverrunAlert? BudgetOverruns = null);
 
 /// <param name="Count">All overdue installments; Items holds the 20 oldest.</param>
 public sealed record OverdueInstallmentsAlert(
@@ -48,3 +50,6 @@ public sealed record WaitingPromotionRow(
     string FirstStudentPhone);
 
 public sealed record WaitingListAlert(int Count, IReadOnlyList<WaitingPromotionRow> Items);
+
+/// <summary>Branches whose expenses this month passed their approved budget (a notice only, nothing is blocked).</summary>
+public sealed record BudgetOverrunAlert(int Count, IReadOnlyList<BudgetOverrunRow> Items);
