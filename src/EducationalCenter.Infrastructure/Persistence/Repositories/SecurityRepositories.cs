@@ -26,12 +26,14 @@ internal sealed class UserRepository(AppDbContext context) : Repository<User>(co
             .ToListAsync(ct);
 
     public Task<(IReadOnlyList<User> Items, int TotalCount)> SearchAsync(
-        string? search, int? roleId, bool? isActive, int page, int pageSize, CancellationToken ct = default)
+        string? search, int? roleId, bool? isActive, int page, int pageSize, int? branchId = null, CancellationToken ct = default)
     {
         var query = Set.AsNoTracking().Include(u => u.Role).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(u => u.FullName.Contains(search) || u.Email.Contains(search));
+        if (branchId.HasValue)
+            query = query.Where(u => u.BranchId == branchId.Value);
         if (roleId.HasValue)
             query = query.Where(u => u.RoleId == roleId.Value);
         if (isActive.HasValue)

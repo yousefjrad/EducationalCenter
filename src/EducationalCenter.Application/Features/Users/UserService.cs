@@ -1,3 +1,4 @@
+using EducationalCenter.Application.Common.Exceptions;
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Application.Common.Models;
 using EducationalCenter.Application.Common.Services;
@@ -22,7 +23,7 @@ public sealed class UserService(
     public async Task<PagedResult<UserDto>> ListAsync(UserListQuery query, CancellationToken ct = default)
     {
         var (items, total) = await uow.Users.SearchAsync(
-            query.Search?.Trim(), query.RoleId, query.IsActive, query.Page, query.PageSize, ct);
+            query.Search?.Trim(), query.RoleId, query.IsActive, query.Page, query.PageSize, query.BranchId, ct);
 
         return new PagedResult<UserDto>(items.Select(u => u.ToDto()).ToList(), total, query.Page, query.PageSize);
     }
@@ -36,11 +37,14 @@ public sealed class UserService(
         var role = await uow.Roles.GetByIdAsync(request.RoleId, ct)
             ?? throw new NotFoundException(nameof(Role), request.RoleId);
 
+        var branchId = await ResolveBranchAsync(role, request.BranchId, ct);
+
         var user = new User
         {
             FullName = request.FullName.Trim(),
             Email = email,
             PasswordHash = hasher.Hash(request.Password),
+            BranchId = branchId,
             RoleId = role.Id,
             Role = role,
             IsActive = true
@@ -69,7 +73,11 @@ public sealed class UserService(
 
         await EnsureNotLastAdminAsync(user, role, request.IsActive, ct);
 
-        var sessionsMustEnd = (user.IsActive && !request.IsActive) || user.RoleId != role.Id;
+        int? branchId = role.Name == SystemRoles.Admin ? null : request.BranchId ?? user.BranchId;
+        if (branchId != user.BranchId || role.Id != user.RoleId)
+            branchId = await ResolveBranchAsync(role, branchId, ct);
+
+        var sessionsMustEnd = (user.IsActive && !request.IsActive) || user.RoleId != role.Id || branchId != user.BranchId;
 
         var reactivated = !user.IsActive && request.IsActive;
 
@@ -78,6 +86,7 @@ public sealed class UserService(
         user.RoleId = role.Id;
         user.Role = role;
         user.IsActive = request.IsActive;
+        user.BranchId = branchId;
 
         // Reactivating an account also ends any failed-sign-in lock.
         if (reactivated)
@@ -130,6 +139,26 @@ public sealed class UserService(
             if (activeAdmins <= 1)
                 throw new ConflictException("The last active Admin cannot be deactivated or moved to another role.");
         }
+    }
+
+    /// <summary>The Admin works across branches and has none; every other role belongs to one existing, open branch.</summary>
+    private async Task<int?> ResolveBranchAsync(Role role, int? requested, CancellationToken ct)
+    {
+        if (role.Name == SystemRoles.Admin)
+        {
+            if (requested is not null)
+                throw new RequestValidationException("branchId", "The Admin role has no branch.");
+            return null;
+        }
+
+        if (requested is not { } id)
+            throw new RequestValidationException("branchId", "A branch is required for this role.");
+
+        var branch = await uow.Branches.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Branch), id);
+        if (!branch.IsActive)
+            throw new ConflictException("This branch is closed.");
+
+        return branch.Id;
     }
 
     private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();

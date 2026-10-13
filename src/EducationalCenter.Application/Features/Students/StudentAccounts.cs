@@ -53,6 +53,7 @@ public sealed class StudentAccountService(IUnitOfWork uow, IPasswordHasher hashe
                 Email = email,
                 PasswordHash = hasher.Hash(request.Password),
                 RoleId = role.Id,
+                BranchId = student.BranchId,
                 IsActive = true
             };
 
@@ -63,7 +64,7 @@ public sealed class StudentAccountService(IUnitOfWork uow, IPasswordHasher hashe
             uow.Students.Update(student);
             await uow.SaveChangesAsync(ct);
 
-            return new UserDto(user.Id, user.FullName, user.Email, role.Id, role.Name, user.IsActive, user.LastLoginAt, user.LockedUntil);
+            return new UserDto(user.Id, user.FullName, user.Email, role.Id, role.Name, user.IsActive, user.LastLoginAt, user.LockedUntil, user.BranchId);
         }, ct);
     }
 }

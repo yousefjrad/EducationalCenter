@@ -1,4 +1,4 @@
-﻿using EducationalCenter.Application.Features.Auth;
+using EducationalCenter.Application.Features.Auth;
 using EducationalCenter.Application.Features.Roles;
 using EducationalCenter.Application.Features.Users;
 using EducationalCenter.Domain.Exceptions;
@@ -16,10 +16,10 @@ public sealed class AdminUnlockTests(AppFixture fx)
     {
         await using var scope = fx.NewScope();
         var roles = await scope.ServiceProvider.GetRequiredService<IRoleService>().ListAsync();
-        var role = roles.First(r => r.Name != "Admin");
+        var role = roles.First(r => r.Name == "Receptionist");
         var email = "unlock." + Guid.NewGuid().ToString("N")[..10] + "@tests.local";
         return await scope.ServiceProvider.GetRequiredService<IUserService>()
-            .CreateAsync(new CreateUserRequest("Unlock Test", email, Password, role.Id));
+            .CreateAsync(new CreateUserRequest("Unlock Test", email, Password, role.Id, 1));
     }
 
     private async Task<AuthResultDto> LoginAsync(string email, string password)

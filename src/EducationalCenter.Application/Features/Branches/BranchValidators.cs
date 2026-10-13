@@ -7,7 +7,7 @@ public sealed class CreateBranchRequestValidator : AbstractValidator<CreateBranc
     public CreateBranchRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Code).NotEmpty().Matches("^[A-Za-z0-9]{2,6}$").WithMessage("Code must be 2 to 6 letters or digits.");
+        RuleFor(x => x.Code).NotEmpty().Matches("^[A-Za-z0-9]{2,5}$").WithMessage("Code must be 2 to 5 letters or digits.");
         RuleFor(x => x.Governorate).MaximumLength(100);
         RuleFor(x => x.Address).MaximumLength(200);
         RuleFor(x => x.Phone).MaximumLength(20);

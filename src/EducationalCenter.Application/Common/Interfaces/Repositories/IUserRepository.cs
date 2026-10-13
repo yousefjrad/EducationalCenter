@@ -19,5 +19,5 @@ public interface IUserRepository : IRepository<User>
 
     /// <summary>Items come with Role loaded, ordered by name. Search matches name or email.</summary>
     Task<(IReadOnlyList<User> Items, int TotalCount)> SearchAsync(
-        string? search, int? roleId, bool? isActive, int page, int pageSize, CancellationToken ct = default);
+        string? search, int? roleId, bool? isActive, int page, int pageSize, int? branchId = null, CancellationToken ct = default);
 }

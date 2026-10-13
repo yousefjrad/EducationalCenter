@@ -3,6 +3,7 @@ using EducationalCenter.Application.Common.Exceptions;
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Domain.Common;
 using EducationalCenter.Domain.Entities;
+using EducationalCenter.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace EducationalCenter.Infrastructure.Persistence;
@@ -91,12 +92,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranch
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         StampBranch();
+        EnsureBranchesOpen();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         StampBranch();
+        EnsureBranchesOpen();
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
@@ -130,6 +133,22 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranch
                 log.BranchId = scoped;
             }
         }
+    }
+
+    /// <summary>A closed branch keeps its data for reading but accepts no new records.</summary>
+    private void EnsureBranchesOpen()
+    {
+        var ids = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added && e.Entity is IBranchOwned)
+            .Select(e => ((IBranchOwned)e.Entity).BranchId)
+            .Distinct()
+            .ToList();
+
+        if (ids.Count == 0)
+            return;
+
+        if (Branches.AsNoTracking().Any(b => ids.Contains(b.Id) && !b.IsActive))
+            throw new ConflictException("This branch is closed and accepts no new records.");
     }
 
     private int? InferBranch(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
