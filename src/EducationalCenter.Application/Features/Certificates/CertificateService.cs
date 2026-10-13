@@ -110,13 +110,16 @@ public sealed class CertificateService(
                 throw new ConflictException("The certificate cannot be issued: " + string.Join("; ", blockers) + ".");
 
             var now = clock.UtcNow;
-            var sequence = await uow.Certificates.GetNextSequenceAsync(now.Year, ct);
+            var branch = await uow.Branches.GetByIdAsync(enrollment.BranchId, ct)
+                ?? throw new NotFoundException(nameof(Branch), enrollment.BranchId);
+            var prefix = $"{branch.Code}-CERT-{now.Year}-";
+            var sequence = await uow.Certificates.GetNextSequenceAsync(prefix, ct);
 
             var certificate = new Certificate
             {
                 EnrollmentId = enrollment.Id,
                 Enrollment = enrollment,
-                CertificateNumber = $"CERT-{now.Year}-{sequence:D5}",
+                CertificateNumber = $"{prefix}{sequence:D5}",
                 IssuedAt = now,
                 IssuedByUserId = userId,
                 IsOverride = bypassed,

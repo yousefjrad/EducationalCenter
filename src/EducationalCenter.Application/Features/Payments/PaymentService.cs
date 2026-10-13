@@ -81,7 +81,7 @@ public sealed class PaymentService(
             var receipt = new Receipt
             {
                 Payment = payment,
-                ReceiptNumber = await receiptNumbers.NextAsync(ct),
+                ReceiptNumber = await receiptNumbers.NextAsync(plan.BranchId, ct),
                 IssuedAt = now,
                 IssuedByUserId = userId
             };

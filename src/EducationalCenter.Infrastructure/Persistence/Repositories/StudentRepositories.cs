@@ -176,9 +176,9 @@ internal sealed class CertificateRepository(AppDbContext context) : Repository<C
     public Task<Certificate?> GetWithDetailsAsync(int id, CancellationToken ct = default) =>
         Detailed().FirstOrDefaultAsync(c => c.Id == id, ct);
 
-    public async Task<int> GetNextSequenceAsync(int year, CancellationToken ct = default)
+    public async Task<int> GetNextSequenceAsync(string prefix, CancellationToken ct = default)
     {
-        var prefix = $"CERT-{year}-";
+        // The prefix comes from the caller: branch code, "-CERT-", year.
 
         // Soft-deleted certificates still hold their number, so the filter is ignored here.
         var numbers = await Set.IgnoreQueryFilters()

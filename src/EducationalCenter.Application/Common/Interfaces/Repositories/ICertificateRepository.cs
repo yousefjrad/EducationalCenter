@@ -11,7 +11,7 @@ public interface ICertificateRepository : IRepository<Certificate>
     /// Next sequence number for certificate numbers of that year (highest issued so far + 1, starting at 1).
     /// Must also consider soft-deleted certificates. A unique index on CertificateNumber is the final guard.
     /// </summary>
-    Task<int> GetNextSequenceAsync(int year, CancellationToken ct = default);
+    Task<int> GetNextSequenceAsync(string prefix, CancellationToken ct = default);
 
     /// <summary>Items come with Enrollment (Student, Section with Course) loaded, newest first.</summary>
     Task<(IReadOnlyList<Certificate> Items, int TotalCount)> SearchAsync(

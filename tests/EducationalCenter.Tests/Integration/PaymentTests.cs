@@ -1,4 +1,4 @@
-﻿using EducationalCenter.Application.Features.Enrollments;
+using EducationalCenter.Application.Features.Enrollments;
 using EducationalCenter.Application.Features.PaymentPlans;
 using EducationalCenter.Application.Features.Payments;
 using EducationalCenter.Domain.Enums;
@@ -114,8 +114,10 @@ public sealed class PaymentTests(AppFixture fx)
         var first = await PaySypAsync(scope.ServiceProvider, plan.Installments[0].Id, 1_000m);
         var second = await PaySypAsync(scope.ServiceProvider, plan.Installments[0].Id, 1_000m);
 
-        Assert.StartsWith("RCP-", first.ReceiptNumber);
-        Assert.Equal(int.Parse(first.ReceiptNumber![4..]) + 1, int.Parse(second.ReceiptNumber![4..]));
+        Assert.Contains("-RCP-", first.ReceiptNumber);
+        Assert.Equal(
+            int.Parse(first.ReceiptNumber![(first.ReceiptNumber.LastIndexOf('-') + 1)..]) + 1,
+            int.Parse(second.ReceiptNumber![(second.ReceiptNumber.LastIndexOf('-') + 1)..]));
     }
 
     [Fact]
