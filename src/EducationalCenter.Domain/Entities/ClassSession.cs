@@ -5,7 +5,7 @@ namespace EducationalCenter.Domain.Entities;
 
 public class ClassSession : BaseEntity, IBranchOwned
 {
-    public int BranchId { get; set; } = 1;
+    public int BranchId { get; set; }
     public int SectionId { get; set; }
     public Section Section { get; set; } = null!;
     public DateOnly Date { get; set; }

@@ -1,11 +1,13 @@
 using System.Linq.Expressions;
+using EducationalCenter.Application.Common.Exceptions;
+using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Domain.Common;
 using EducationalCenter.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace EducationalCenter.Infrastructure.Persistence;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranchContext? branchContext = null) : DbContext(options)
 {
     // Academic
     public DbSet<Course> Courses => Set<Course>();
@@ -60,9 +62,97 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         ConfigureBranches(modelBuilder);
 
         ApplySoftDeleteFilters(modelBuilder);
+        ApplyBranchFilters(modelBuilder);
         ConfigureDeleteBehaviors(modelBuilder);
     }
 
+    private int? CurrentBranchId => branchContext?.BranchId;
+
+    /// <summary>
+    /// Branch-owned records are hidden from every other branch, and soft-deleted rows from everyone.
+    /// A request with no branch scope (Super Admin viewing all branches, or a background job) sees all branches.
+    /// </summary>
+    private void ApplyBranchFilters(ModelBuilder modelBuilder)
+    {
+        var method = typeof(AppDbContext).GetMethod(nameof(ApplyBranchFilter), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+        foreach (var type in modelBuilder.Model.GetEntityTypes()
+                     .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType) && typeof(IBranchOwned).IsAssignableFrom(t.ClrType))
+                     .Select(t => t.ClrType)
+                     .ToList())
+            method.MakeGenericMethod(type).Invoke(this, [modelBuilder]);
+
+        modelBuilder.Entity<AuditLog>().HasQueryFilter(e => CurrentBranchId == null || e.BranchId == CurrentBranchId);
+    }
+
+    private void ApplyBranchFilter<T>(ModelBuilder modelBuilder) where T : BaseEntity, IBranchOwned =>
+        modelBuilder.Entity<T>().HasQueryFilter(e => !e.IsDeleted && (CurrentBranchId == null || e.BranchId == CurrentBranchId));
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampBranch();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        StampBranch();
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// New branch-owned records get the request's branch, never a value the caller sent.
+    /// With no scope the branch is taken from a tracked parent (for example the section of a new enrollment), or the save is refused.
+    /// </summary>
+    private void StampBranch()
+    {
+        var scoped = branchContext?.BranchId;
+
+        foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Added).ToList())
+        {
+            if (entry.Entity is IBranchOwned owned)
+            {
+                if (scoped is int own)
+                {
+                    if (own <= 0)
+                        throw new RequestValidationException("branch", "Your account is not assigned to a branch.");
+
+                    owned.BranchId = own;
+                }
+                else if (owned.BranchId == 0)
+                {
+                    owned.BranchId = InferBranch(entry)
+                        ?? throw new RequestValidationException("branch", "Select a branch first: this record must belong to one branch (send the X-Branch-Id header).");
+                }
+            }
+            else if (entry.Entity is AuditLog log && log.BranchId is null && scoped is > 0)
+            {
+                log.BranchId = scoped;
+            }
+        }
+    }
+
+    private int? InferBranch(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+    {
+        foreach (var foreignKey in entry.Metadata.GetForeignKeys())
+        {
+            if (!typeof(IBranchOwned).IsAssignableFrom(foreignKey.PrincipalEntityType.ClrType))
+                continue;
+
+            var value = entry.Property(foreignKey.Properties[0].Name).CurrentValue;
+            if (value is null)
+                continue;
+
+            var keyName = foreignKey.PrincipalKey.Properties[0].Name;
+            var parent = ChangeTracker.Entries().FirstOrDefault(e =>
+                e.Metadata == foreignKey.PrincipalEntityType && Equals(e.Property(keyName).CurrentValue, value));
+
+            if (parent?.Entity is IBranchOwned owner && owner.BranchId != 0)
+                return owner.BranchId;
+        }
+
+        return null;
+    }
     /// <summary>Branches, their links, budgets, and a foreign key from every branch-owned record to its branch.</summary>
     private static void ConfigureBranches(ModelBuilder modelBuilder)
     {
@@ -112,10 +202,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.Entity<AuditLog>().HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
     }
     /// <summary>Every BaseEntity hides its soft-deleted rows from all queries.</summary>
-    private static void ApplySoftDeleteFilters(ModelBuilder modelBuilder)
+    private void ApplySoftDeleteFilters(ModelBuilder modelBuilder)
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes()
-                     .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType))
+                     .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType) && !typeof(IBranchOwned).IsAssignableFrom(t.ClrType))
                      .ToList())
         {
             var parameter = Expression.Parameter(entityType.ClrType, "e");

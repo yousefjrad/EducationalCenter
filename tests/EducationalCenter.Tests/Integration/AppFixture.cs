@@ -41,6 +41,8 @@ public sealed class AppFixture : IAsyncLifetime
 
     public FakeCurrentUser CurrentUser { get; } = new();
 
+    public FakeBranchContext Branch { get; } = new();
+
     public AsyncServiceScope NewScope() => _provider!.CreateAsyncScope();
 
     public async Task InitializeAsync()
@@ -74,6 +76,7 @@ public sealed class AppFixture : IAsyncLifetime
         services.AddSingleton<IClock>(Clock);
         services.RemoveAll<ICurrentUser>();
         services.AddSingleton<ICurrentUser>(CurrentUser);
+        services.AddSingleton<IBranchContext>(Branch);
 
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
 
@@ -132,3 +135,11 @@ public sealed class AppFixture : IAsyncLifetime
 
 [CollectionDefinition("integration")]
 public sealed class IntegrationCollection : ICollectionFixture<AppFixture>;
+
+/// <summary>The branch scope of the test "request". Defaults to branch 1 (the default branch created by the migration).</summary>
+public sealed class FakeBranchContext : IBranchContext
+{
+    public int? BranchId { get; set; } = 1;
+
+    public bool IsSuperAdmin { get; set; }
+}

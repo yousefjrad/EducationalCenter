@@ -5,7 +5,7 @@ namespace EducationalCenter.Domain.Entities;
 
 public class Installment : BaseEntity, IBranchOwned
 {
-    public int BranchId { get; set; } = 1;
+    public int BranchId { get; set; }
     public int PaymentPlanId { get; set; }
     public PaymentPlan PaymentPlan { get; set; } = null!;
 

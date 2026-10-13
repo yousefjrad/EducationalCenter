@@ -41,6 +41,7 @@ internal sealed class JwtAccessTokenGenerator(JwtOptions options, IClock clock) 
                 ["email"] = user.Email,
                 ["name"] = user.FullName,
                 ["role"] = roleName,
+                ["branch_id"] = user.BranchId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
                 ["jti"] = Guid.NewGuid().ToString("N")
             }
         };

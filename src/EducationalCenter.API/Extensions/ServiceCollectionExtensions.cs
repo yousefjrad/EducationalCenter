@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<ISecurityEventLogger, SecurityEventLogger>();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
+        services.AddScoped<IBranchContext, HttpBranchContext>();
 
         services
             .AddControllers(options =>

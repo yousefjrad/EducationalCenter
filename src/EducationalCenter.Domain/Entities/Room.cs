@@ -4,7 +4,7 @@ namespace EducationalCenter.Domain.Entities;
 
 public class Room : BaseEntity, IBranchOwned
 {
-    public int BranchId { get; set; } = 1;
+    public int BranchId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int Capacity { get; set; }
     public string? Description { get; set; }

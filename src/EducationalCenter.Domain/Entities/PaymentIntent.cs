@@ -9,7 +9,7 @@ namespace EducationalCenter.Domain.Entities;
 /// </summary>
 public class PaymentIntent : BaseEntity, IBranchOwned
 {
-    public int BranchId { get; set; } = 1;
+    public int BranchId { get; set; }
     public int InstallmentId { get; set; }
     public Installment Installment { get; set; } = null!;
 
