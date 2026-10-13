@@ -1,6 +1,5 @@
 using Asp.Versioning;
 using EducationalCenter.API.Authorization;
-using EducationalCenter.Application.Common.Models;
 using EducationalCenter.Application.Features.Branches;
 using EducationalCenter.Domain.Constants;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +11,8 @@ public sealed class BranchesController(IBranchService service) : ApiControllerBa
 {
     [HttpGet]
     [HasPermission(Permissions.Branches.View)]
-    public async Task<ActionResult<PagedResult<BranchDto>>> List([FromQuery] BranchListQuery query, CancellationToken ct) =>
-        Ok(await service.ListAsync(query, ct));
+    public async Task<ActionResult<IReadOnlyList<BranchDto>>> List(CancellationToken ct) =>
+        Ok(await service.ListAsync(ct));
 
     [HttpGet("{id:int}")]
     [HasPermission(Permissions.Branches.View)]

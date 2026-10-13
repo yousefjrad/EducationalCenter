@@ -6,11 +6,11 @@ public sealed class CreateBranchRequestValidator : AbstractValidator<CreateBranc
 {
     public CreateBranchRequestValidator()
     {
-        RuleFor(x => x.Code).NotEmpty().Matches("^[A-Za-z0-9]{2,10}$").WithMessage("Code must be 2 to 10 letters or digits.");
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Code).NotEmpty().Matches("^[A-Za-z0-9]{2,6}$").WithMessage("Code must be 2 to 6 letters or digits.");
         RuleFor(x => x.Governorate).MaximumLength(100);
-        RuleFor(x => x.Address).MaximumLength(300);
-        RuleFor(x => x.Phone).MaximumLength(30);
+        RuleFor(x => x.Address).MaximumLength(200);
+        RuleFor(x => x.Phone).MaximumLength(20);
     }
 }
 
@@ -18,19 +18,9 @@ public sealed class UpdateBranchRequestValidator : AbstractValidator<UpdateBranc
 {
     public UpdateBranchRequestValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Governorate).MaximumLength(100);
-        RuleFor(x => x.Address).MaximumLength(300);
-        RuleFor(x => x.Phone).MaximumLength(30);
-    }
-}
-
-public sealed class BranchListQueryValidator : AbstractValidator<BranchListQuery>
-{
-    public BranchListQueryValidator()
-    {
-        RuleFor(x => x.Search).MaximumLength(100);
-        RuleFor(x => x.Page).GreaterThanOrEqualTo(1);
-        RuleFor(x => x.PageSize).InclusiveBetween(1, 100);
+        RuleFor(x => x.Address).MaximumLength(200);
+        RuleFor(x => x.Phone).MaximumLength(20);
     }
 }

@@ -34,6 +34,7 @@ public static class DatabaseInitializer
         await SeedPermissionsAsync(db, ct);
         await SeedRolesAsync(db, ct);
         await SeedStudentRoleAsync(db, ct);
+        await SeedBranchManagerRoleAsync(db, ct);
         await SeedSettingsAsync(db, ct);
         await SeedCertificateTemplatesAsync(db, ct);
         await SeedFirstAdminAsync(db, hasher, configuration, ct);
@@ -122,6 +123,28 @@ public static class DatabaseInitializer
             IsSystem = true
         });
 
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Created once with its defaults; afterwards the Admin may edit it freely.</summary>
+    private static async Task SeedBranchManagerRoleAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.Roles.AnyAsync(r => r.Name == SystemRoles.BranchManager, ct))
+            return;
+
+        var permissionsByName = (await db.Permissions.ToListAsync(ct)).ToDictionary(p => p.Name);
+
+        var role = new Role
+        {
+            Name = SystemRoles.BranchManager,
+            Description = "Branch manager: daily operations of one branch only",
+            IsSystem = true
+        };
+
+        foreach (var name in SystemRoles.BranchManagerPermissions.Distinct())
+            role.RolePermissions.Add(new RolePermission { Role = role, Permission = permissionsByName[name] });
+
+        db.Roles.Add(role);
         await db.SaveChangesAsync(ct);
     }
 
