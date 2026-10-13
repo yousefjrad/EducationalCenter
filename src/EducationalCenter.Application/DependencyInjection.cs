@@ -1,6 +1,7 @@
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Application.Common.Services;
 using EducationalCenter.Application.Features.Attendances;
+using EducationalCenter.Application.Features.Branches;
 using EducationalCenter.Application.Features.Alerts;
 using EducationalCenter.Application.Features.AuditLogs;
 using EducationalCenter.Application.Features.Auth;
@@ -69,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<ISettingService, SettingService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IFinancialReportService, FinancialReportService>();

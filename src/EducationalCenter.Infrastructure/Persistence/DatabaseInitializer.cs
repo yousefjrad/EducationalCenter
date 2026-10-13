@@ -89,6 +89,23 @@ public static class DatabaseInitializer
             db.Roles.Add(receptionist);
         }
 
+        // BranchManager: created once with its defaults, then freely editable by the Admin.
+        var branchManagerExists = await db.Roles.AnyAsync(r => r.Name == SystemRoles.BranchManager, ct);
+        if (!branchManagerExists)
+        {
+            var branchManager = new Role
+            {
+                Name = SystemRoles.BranchManager,
+                Description = "Branch manager: daily operations of one branch only",
+                IsSystem = true
+            };
+
+            foreach (var permissionName in SystemRoles.BranchManagerPermissions)
+                branchManager.RolePermissions.Add(new RolePermission { Role = branchManager, Permission = permissionsByName[permissionName] });
+
+            db.Roles.Add(branchManager);
+        }
+
         await db.SaveChangesAsync(ct);
     }
 

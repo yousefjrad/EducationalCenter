@@ -28,6 +28,7 @@ public interface IUnitOfWork
     IRefreshTokenRepository RefreshTokens { get; }
     IReportRepository Reports { get; }
     IAuditLogRepository AuditLogs { get; }
+    IBranchRepository Branches { get; }
     // More repositories are added here as later features need them.
 
     /// <summary>Takes an update lock on the section row until the current transaction ends, so concurrent seat checks run one after another.</summary>

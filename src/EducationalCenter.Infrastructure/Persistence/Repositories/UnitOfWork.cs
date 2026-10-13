@@ -31,6 +31,7 @@ internal sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
     private IRefreshTokenRepository? _refreshTokens;
     private IReportRepository? _reports;
     private IAuditLogRepository? _auditLogs;
+    private IBranchRepository? _branches;
 
     public ICourseRepository Courses => _courses ??= new CourseRepository(db);
     public IRoomRepository Rooms => _rooms ??= new RoomRepository(db);
@@ -56,6 +57,7 @@ internal sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
     public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(db);
     public IReportRepository Reports => _reports ??= new ReportRepository(db);
     public IAuditLogRepository AuditLogs => _auditLogs ??= new AuditLogRepository(db);
+    public IBranchRepository Branches => _branches ??= new BranchRepository(db);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => db.SaveChangesAsync(ct);
 
