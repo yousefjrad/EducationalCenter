@@ -42,6 +42,12 @@ public sealed class StudentsController(IStudentService service, IStudentAccountS
         return NoContent();
     }
 
+    /// <summary>Moves the student to another open branch (super admin only). Refused while the student has open enrollments or waits in a list.</summary>
+    [HttpPost("{id:int}/transfer")]
+    [HasPermission(Permissions.Students.Transfer)]
+    public async Task<ActionResult<StudentTransferResultDto>> Transfer(int id, TransferStudentRequest request, CancellationToken ct) =>
+        Ok(await service.TransferAsync(id, request, ct));
+
     /// <summary>Creates a sign-in account (role "Student") so the student can use the student portal.</summary>
     [HttpPost("{id:int}/account")]
     [HasPermission(Permissions.Students.Update)]

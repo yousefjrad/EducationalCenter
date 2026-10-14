@@ -10,6 +10,9 @@ public interface IStudentRepository : IRepository<Student>
     /// <summary>True if the student has any enrollment or waiting-list entry.</summary>
     Task<bool> HasEnrollmentsAsync(int studentId, CancellationToken ct = default);
 
+    /// <summary>True if the student has a confirmed enrollment, a pending one whose hold has not expired, or a waiting-list entry (any branch).</summary>
+    Task<bool> HasOpenWorkAsync(int studentId, DateTime utcNow, CancellationToken ct = default);
+
     /// <summary>Search by name or phone.</summary>
     Task<(IReadOnlyList<Student> Items, int TotalCount)> SearchAsync(
         string? search, bool? isActive, int page, int pageSize, CancellationToken ct = default);

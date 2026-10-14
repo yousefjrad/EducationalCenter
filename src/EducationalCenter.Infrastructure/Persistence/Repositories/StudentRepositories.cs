@@ -14,6 +14,13 @@ internal sealed class StudentRepository(AppDbContext context) : Repository<Stude
     public Task<Student?> FindByNameAndPhoneAsync(string fullName, string phoneNumber, CancellationToken ct = default) =>
         Set.AsNoTracking().FirstOrDefaultAsync(s => s.FullName == fullName && s.PhoneNumber == phoneNumber, ct);
 
+    public async Task<bool> HasOpenWorkAsync(int studentId, DateTime utcNow, CancellationToken ct = default) =>
+        await Db.Enrollments.IgnoreQueryFilters().AnyAsync(e => e.StudentId == studentId && !e.IsDeleted
+            && (e.Status == EnrollmentStatus.Confirmed
+                || (e.Status == EnrollmentStatus.Pending && e.HoldExpiresAt > utcNow)), ct)
+        || await Db.WaitingListEntries.IgnoreQueryFilters().AnyAsync(w => w.StudentId == studentId && !w.IsDeleted
+            && w.Status == WaitingListStatus.Waiting, ct);
+
     public async Task<bool> HasEnrollmentsAsync(int studentId, CancellationToken ct = default) =>
         await Db.Enrollments.AnyAsync(e => e.StudentId == studentId, ct)
         || await Db.WaitingListEntries.AnyAsync(w => w.StudentId == studentId, ct);
