@@ -47,4 +47,11 @@ public interface IReportRepository
     /// (same seat rule as CountSeatsTakenAsync) and at least one Waiting entry, with the first person in line.
     /// </summary>
     Task<IReadOnlyList<WaitingPromotionRow>> GetPromotableWaitingAsync(DateTime utcNow, CancellationToken ct = default);
+
+    /// <summary>
+    /// One row per branch (closed branches included), computed across ALL branches whatever the current branch scope.
+    /// Soft-deleted records are excluded. Revenue, expenses and paid payroll are limited to the two dates inclusive.
+    /// </summary>
+    Task<IReadOnlyList<BranchComparisonRow>> GetBranchComparisonAsync(
+        DateOnly from, DateOnly to, DateTime utcNow, DateOnly today, CancellationToken ct = default);
 }

@@ -175,6 +175,121 @@ internal sealed class ReportRepository(AppDbContext db) : IReportRepository
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<BranchComparisonRow>> GetBranchComparisonAsync(
+        DateOnly from, DateOnly to, DateTime utcNow, DateOnly today, CancellationToken ct = default)
+    {
+        var start = DateRanges.StartOfDay(from);
+        var end = DateRanges.StartOfNextDay(to);
+
+        var branches = await db.Branches.AsNoTracking()
+            .OrderBy(b => b.Name)
+            .Select(b => new { b.Id, b.Name, b.Code, b.IsActive })
+            .ToListAsync(ct);
+
+        var revenue = (await db.Payments.IgnoreQueryFilters().AsNoTracking()
+            .Where(p => !p.IsDeleted && p.Status == PaymentStatus.Valid && p.PaidAt >= start && p.PaidAt < end)
+            .GroupBy(p => p.BranchId)
+            .Select(g => new { BranchId = g.Key, Total = g.Sum(p => p.AmountInSyp) })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId, x => x.Total);
+
+        var expenses = (await db.Expenses.IgnoreQueryFilters().AsNoTracking()
+            .Where(e => !e.IsDeleted && e.ExpenseDate >= from && e.ExpenseDate <= to)
+            .GroupBy(e => e.BranchId)
+            .Select(g => new { BranchId = g.Key, Total = g.Sum(e => e.AmountInSyp) })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId, x => x.Total);
+
+        var payroll = (await db.TrainerPayrolls.IgnoreQueryFilters().AsNoTracking()
+            .Where(p => !p.IsDeleted && p.Status == PayrollStatus.Paid && p.PaidAt >= start && p.PaidAt < end)
+            .GroupBy(p => p.BranchId)
+            .Select(g => new { BranchId = g.Key, Total = g.Sum(p => p.AmountInSyp) })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId, x => x.Total);
+
+        var students = (await db.Students.IgnoreQueryFilters().AsNoTracking()
+            .Where(s => !s.IsDeleted && s.IsActive)
+            .GroupBy(s => s.BranchId)
+            .Select(g => new { BranchId = g.Key, Count = g.Count() })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId, x => x.Count);
+
+        var newEnrollments = (await db.Enrollments.IgnoreQueryFilters().AsNoTracking()
+            .Where(e => !e.IsDeleted && e.EnrolledAt >= start && e.EnrolledAt < end
+                        && (e.Status == EnrollmentStatus.Confirmed || e.Status == EnrollmentStatus.Completed))
+            .GroupBy(e => e.BranchId)
+            .Select(g => new { BranchId = g.Key, Count = g.Count() })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId, x => x.Count);
+
+        var attendance = (await db.Attendances.IgnoreQueryFilters().AsNoTracking()
+            .Where(a => !a.IsDeleted && !a.ClassSession.IsDeleted
+                        && a.ClassSession.Date >= from && a.ClassSession.Date <= to)
+            .GroupBy(a => a.BranchId)
+            .Select(g => new { BranchId = g.Key, Total = g.Count(), Present = g.Count(a => a.IsPresent) })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId);
+
+        var capacity = (await db.Sections.IgnoreQueryFilters().AsNoTracking()
+            .Where(s => !s.IsDeleted
+                        && (s.Status == SectionStatus.OpenForEnrollment || s.Status == SectionStatus.InProgress))
+            .GroupBy(s => s.BranchId)
+            .Select(g => new { BranchId = g.Key, Total = g.Sum(s => s.Capacity) })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId, x => x.Total);
+
+        var seatsTaken = (await db.Enrollments.IgnoreQueryFilters().AsNoTracking()
+            .Where(e => !e.IsDeleted && !e.Section.IsDeleted
+                        && (e.Section.Status == SectionStatus.OpenForEnrollment || e.Section.Status == SectionStatus.InProgress)
+                        && (e.Status == EnrollmentStatus.Confirmed
+                            || (e.Status == EnrollmentStatus.Pending && e.HoldExpiresAt > utcNow)))
+            .GroupBy(e => e.BranchId)
+            .Select(g => new { BranchId = g.Key, Count = g.Count() })
+            .ToListAsync(ct)).ToDictionary(x => x.BranchId, x => x.Count);
+
+        var installments = await db.Installments.IgnoreQueryFilters().AsNoTracking()
+            .Where(i => !i.IsDeleted && !i.PaymentPlan.IsDeleted
+                        && i.PaymentPlan.Status != PaymentPlanStatus.Cancelled
+                        && ((i.DueDate >= from && i.DueDate <= to)
+                            || (i.DueDate < today && i.PaymentPlan.Status == PaymentPlanStatus.Open
+                                && i.Status != InstallmentStatus.Paid)))
+            .Select(i => new
+            {
+                i.BranchId,
+                i.Amount,
+                i.DueDate,
+                PlanOpen = i.PaymentPlan.Status == PaymentPlanStatus.Open,
+                InstallmentStatus = i.Status,
+                Paid = i.Payments
+                    .Where(p => !p.IsDeleted && p.Status == PaymentStatus.Valid)
+                    .Sum(p => (decimal?)p.AmountInSyp) ?? 0m
+            })
+            .ToListAsync(ct);
+
+        static decimal? Pct(decimal part, decimal whole) => whole > 0m ? Math.Round(part * 100m / whole, 1) : null;
+
+        return branches.Select(b =>
+        {
+            var rev = revenue.GetValueOrDefault(b.Id);
+            var exp = expenses.GetValueOrDefault(b.Id);
+            var pay = payroll.GetValueOrDefault(b.Id);
+
+            decimal? attendanceRate = attendance.TryGetValue(b.Id, out var att) ? Pct(att.Present, att.Total) : null;
+            var fillRate = Pct(seatsTaken.GetValueOrDefault(b.Id), capacity.GetValueOrDefault(b.Id));
+
+            var mine = installments.Where(i => i.BranchId == b.Id).ToList();
+            var inPeriod = mine.Where(i => i.DueDate >= from && i.DueDate <= to).ToList();
+            var due = inPeriod.Sum(i => i.Amount);
+            var collected = inPeriod.Sum(i => Math.Min(i.Amount, i.Paid));
+
+            var overdue = mine
+                .Where(i => i.PlanOpen && i.InstallmentStatus != InstallmentStatus.Paid && i.DueDate < today && i.Amount > i.Paid)
+                .ToList();
+
+            return new BranchComparisonRow(
+                b.Id, b.Name, b.Code, b.IsActive,
+                rev, exp, pay, rev - exp - pay,
+                students.GetValueOrDefault(b.Id),
+                newEnrollments.GetValueOrDefault(b.Id),
+                attendanceRate, fillRate, Pct(collected, due),
+                overdue.Sum(i => i.Amount - i.Paid),
+                overdue.Count);
+        }).ToList();
+    }
+
     public async Task<IReadOnlyList<WaitingPromotionRow>> GetPromotableWaitingAsync(
         DateTime utcNow, CancellationToken ct = default)
     {
