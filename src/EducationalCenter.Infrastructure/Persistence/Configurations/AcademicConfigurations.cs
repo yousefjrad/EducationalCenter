@@ -25,7 +25,7 @@ public sealed class RoomConfiguration : IEntityTypeConfiguration<Room>
         b.Property(x => x.Description).HasMaxLength(500);
         b.Property(x => x.Location).HasMaxLength(200);
 
-        b.HasIndex(x => x.Name).IsUnique().HasFilter(Db.NotDeleted);
+        b.HasIndex(x => new { x.BranchId, x.Name }).IsUnique().HasFilter(Db.NotDeleted);
     }
 }
 
@@ -51,7 +51,7 @@ public sealed class SectionConfiguration : IEntityTypeConfiguration<Section>
         b.HasOne(x => x.Trainer).WithMany(t => t.Sections).HasForeignKey(x => x.TrainerId);
         b.HasOne(x => x.Room).WithMany(r => r.Sections).HasForeignKey(x => x.RoomId);
 
-        b.HasIndex(x => new { x.CourseId, x.Name }).IsUnique().HasFilter(Db.NotDeleted);
+        b.HasIndex(x => new { x.BranchId, x.CourseId, x.Name }).IsUnique().HasFilter(Db.NotDeleted);
         b.HasIndex(x => x.TrainerId);
         b.HasIndex(x => x.RoomId);
         b.HasIndex(x => x.Status);

@@ -1086,7 +1086,7 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BranchId");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("BranchId", "Name")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
@@ -1150,13 +1150,15 @@ namespace EducationalCenter.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("BranchId");
 
+                    b.HasIndex("CourseId");
+
                     b.HasIndex("RoomId");
 
                     b.HasIndex("Status");
 
                     b.HasIndex("TrainerId");
 
-                    b.HasIndex("CourseId", "Name")
+                    b.HasIndex("BranchId", "CourseId", "Name")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
