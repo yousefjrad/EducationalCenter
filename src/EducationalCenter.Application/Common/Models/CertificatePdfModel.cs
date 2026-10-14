@@ -9,4 +9,7 @@ public sealed record CertificatePdfModel(
     string Body,
     string CertificateNumber,
     DateOnly IssueDate,
-    string Language);
+    string Language,
+    string? BranchName = null,
+    string? BranchAddress = null,
+    string? BranchPhone = null);

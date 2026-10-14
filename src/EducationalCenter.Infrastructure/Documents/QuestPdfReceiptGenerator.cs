@@ -28,6 +28,12 @@ internal sealed class QuestPdfReceiptGenerator : IReceiptPdfGenerator
 
         var balance = $"{model.BalanceAfterInSyp.ToString("N0", Inv)} SYP";
 
+        var hasLogo = !string.IsNullOrWhiteSpace(model.LogoPath)
+                      && File.Exists(model.LogoPath)
+                      && new[] { ".png", ".jpg", ".jpeg" }.Contains(Path.GetExtension(model.LogoPath).ToLowerInvariant());
+
+        var branchLine = string.Join("  |  ", new[] { model.BranchName, model.BranchAddress, model.BranchPhone }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
         var rows = new List<(string Label, string Value)>
         {
             (L(PdfText.Date, "Date"), issued),
@@ -56,9 +62,14 @@ internal sealed class QuestPdfReceiptGenerator : IReceiptPdfGenerator
             {
                 head.Item().Background(PdfTheme.Navy).PaddingVertical(16).PaddingHorizontal(24).Row(row =>
                 {
+                    if (hasLogo)
+                        row.ConstantItem(60).AlignMiddle().Height(36).Image(model.LogoPath!).FitArea();
+
                     row.RelativeItem().AlignMiddle().Column(title =>
                     {
                         title.Item().Text(model.CenterName).FontSize(17).Bold().FontColor(PdfTheme.White);
+                        if (!string.IsNullOrWhiteSpace(model.BranchName))
+                            title.Item().Text(model.BranchName).FontSize(11).FontColor(PdfTheme.White);
                         title.Item().Text(L(PdfText.ReceiptTitle, "Payment receipt")).FontSize(12).FontColor(PdfTheme.Gold);
                     });
 
@@ -133,7 +144,7 @@ internal sealed class QuestPdfReceiptGenerator : IReceiptPdfGenerator
             {
                 foot.Item().Height(3).Background(PdfTheme.Gold);
                 foot.Item().Background(PdfTheme.Navy).Padding(8).AlignCenter()
-                    .Text($"{model.CenterName}   |   {L(PdfText.Printed, "Printed")}: {printed}")
+                    .Text($"{model.CenterName}   |   {(branchLine.Length > 0 ? branchLine + "   |   " : "")}{L(PdfText.Printed, "Printed")}: {printed}")
                     .FontSize(8).FontColor(PdfTheme.White);
             });
         })).GeneratePdf();

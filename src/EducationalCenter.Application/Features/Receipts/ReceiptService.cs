@@ -39,6 +39,8 @@ public sealed class ReceiptService(
 
         var dto = await BuildDtoAsync(receipt, ct);
         var centerName = await settings.GetStringAsync(SettingKeys.CenterName, "Educational Center", ct);
+        var branch = await uow.Branches.GetByIdAsync(receipt.Payment.BranchId, ct);
+        var logoTemplate = await uow.CertificateTemplates.GetDefaultAsync(language, ct);
 
         var model = new ReceiptPdfModel(
             centerName,
@@ -55,7 +57,8 @@ public sealed class ReceiptService(
             dto.BalanceAfterInSyp,
             receipt.Payment.ReceivedByUser.FullName,
             dto.IsVoid,
-            language);
+            language,
+            branch?.Name, branch?.Address, branch?.Phone, logoTemplate?.LogoPath);
 
         return new ReceiptFileDto(pdfGenerator.Generate(model), $"receipt-{dto.ReceiptNumber}.pdf");
     }

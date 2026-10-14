@@ -24,6 +24,8 @@ internal sealed class QuestPdfCertificateGenerator : ICertificatePdfGenerator
 
         var date = model.IssueDate.ToString("yyyy-MM-dd", Inv);
 
+        var branchLine = string.Join("  |  ", new[] { model.BranchName, model.BranchAddress, model.BranchPhone }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
         return Document.Create(container => container.Page(page =>
         {
             page.Size(PageSizes.A4.Landscape());
@@ -43,6 +45,8 @@ internal sealed class QuestPdfCertificateGenerator : ICertificatePdfGenerator
                         col.Item().AlignCenter().Height(60).Image(model.LogoPath!).FitArea();
 
                     col.Item().AlignCenter().Text(model.CenterName).FontSize(22).Bold().FontColor(PdfTheme.Navy);
+                    if (branchLine.Length > 0)
+                        col.Item().AlignCenter().Text(branchLine).FontSize(12).FontColor(PdfTheme.Muted);
                     col.Item().AlignCenter().Width(120).Height(2).Background(PdfTheme.Gold);
 
                     col.Item().PaddingTop(8).AlignCenter()

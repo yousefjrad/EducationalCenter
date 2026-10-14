@@ -61,6 +61,7 @@ public sealed class CertificateService(
             ?? throw new ConflictException($"No default certificate template is configured for language '{language}'.");
 
         var enrollment = certificate.Enrollment;
+        var pdfBranch = await uow.Branches.GetByIdAsync(enrollment.BranchId, ct);
         var issueDate = DateOnly.FromDateTime(certificate.IssuedAt);
 
         var values = new Dictionary<string, string>
@@ -83,7 +84,8 @@ public sealed class CertificateService(
             body,
             certificate.CertificateNumber,
             issueDate,
-            template.Language);
+            template.Language,
+            pdfBranch?.Name, pdfBranch?.Address, pdfBranch?.Phone);
 
         return new CertificateFileDto(pdfGenerator.Generate(model), $"certificate-{certificate.CertificateNumber}.pdf");
     }

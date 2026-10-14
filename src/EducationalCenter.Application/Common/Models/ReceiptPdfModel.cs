@@ -17,4 +17,8 @@ public sealed record ReceiptPdfModel(
     decimal BalanceAfterInSyp,
     string ReceivedByName,
     bool IsVoid,
-    string Language);
+    string Language,
+    string? BranchName = null,
+    string? BranchAddress = null,
+    string? BranchPhone = null,
+    string? LogoPath = null);
