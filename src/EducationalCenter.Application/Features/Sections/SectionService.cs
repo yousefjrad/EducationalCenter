@@ -6,7 +6,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Sections;
 
-public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionService
+public sealed class SectionService(IUnitOfWork uow, IClock clock, IAuditLogger audit) : ISectionService
 {
     private static readonly Dictionary<SectionStatus, SectionStatus[]> AllowedTransitions = new()
     {
@@ -75,6 +75,9 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionServ
 
         await uow.Sections.AddAsync(section, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("Section.Create", nameof(Section), section.Id, null, Snapshot(section), null, ct);
+        await uow.SaveChangesAsync(ct);
         return section.ToDto();
     }
 
@@ -119,6 +122,9 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionServ
             throw new ConflictException(
                 "Trainer, room, dates and weekly schedule cannot be changed once sessions were generated or students enrolled.");
         }
+
+        await audit.LogAsync("Section.Update", nameof(Section), section.Id, Snapshot(section),
+            new { Name = name, request.Price, request.Capacity, request.MinStudents, request.TrainerId, request.RoomId, request.StartDate, request.EndDate }, null, ct);
 
         section.Name = name;
         section.Price = request.Price;
@@ -185,6 +191,8 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionServ
             }
         }
 
+        await audit.LogAsync("Section.StatusChange", nameof(Section), section.Id, new { section.Status }, new { request.Status }, null, ct);
+
         section.Status = request.Status;
         uow.Sections.Update(section);
         await uow.SaveChangesAsync(ct);
@@ -203,11 +211,15 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock) : ISectionServ
             throw new ConflictException("Only an empty draft section can be deleted. Cancel the section instead.");
         }
 
+        await audit.LogAsync("Section.Delete", nameof(Section), section.Id, Snapshot(section), null, null, ct);
+
         uow.Sections.Remove(section);
         await uow.SaveChangesAsync(ct);
     }
 
     // ---------- helpers ----------
+
+    private static object Snapshot(Section s) => new { s.Name, s.CourseId, s.TrainerId, s.RoomId, s.StartDate, s.EndDate, s.Price, s.Capacity, s.MinStudents, s.Status };
 
     private async Task<Trainer> GetActiveTrainerAsync(int trainerId, CancellationToken ct)
     {

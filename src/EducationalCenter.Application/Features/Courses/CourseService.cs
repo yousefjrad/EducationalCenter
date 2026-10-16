@@ -9,7 +9,7 @@ namespace EducationalCenter.Application.Features.Courses;
 /// Request-shape validation (FluentValidation) happens before this service, in an API filter.
 /// Rules that need the database live here.
 /// </remarks>
-public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext) : ICourseService
+public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext, IAuditLogger audit) : ICourseService
 {
     public async Task<CourseDto> GetByIdAsync(int id, CancellationToken ct = default) =>
         (await FindAsync(id, ct)).ToDto();
@@ -44,6 +44,9 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext)
 
         await uow.Courses.AddAsync(course, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("Course.Create", nameof(Course), course.Id, null, Snapshot(course), null, ct);
+        await uow.SaveChangesAsync(ct);
         return course.ToDto();
     }
 
@@ -55,6 +58,8 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext)
         if (await uow.Courses.CodeExistsAsync(code, id, ct))
             throw new ConflictException($"Course code '{code}' is already in use.");
 
+        var before = Snapshot(course);
+
         course.Code = code;
         course.Name = request.Name.Trim();
         course.Description = request.Description?.Trim();
@@ -62,6 +67,8 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext)
         course.DefaultDurationHours = request.DefaultDurationHours;
         course.DefaultPrice = request.DefaultPrice;
         course.IsActive = request.IsActive;
+
+        await audit.LogAsync("Course.Update", nameof(Course), course.Id, before, Snapshot(course), null, ct);
 
         uow.Courses.Update(course);
         await uow.SaveChangesAsync(ct);
@@ -74,6 +81,8 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext)
 
         if (await uow.Courses.HasSectionsAsync(id, ct))
             throw new ConflictException("This course has sections and cannot be deleted. Deactivate it instead.");
+
+        await audit.LogAsync("Course.Delete", nameof(Course), course.Id, Snapshot(course), null, null, ct);
 
         uow.Courses.Remove(course);
         await uow.SaveChangesAsync(ct);
@@ -89,6 +98,8 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext)
 
         return course;
     }
+
+    private static object Snapshot(Course c) => new { c.Code, c.Name, c.Level, c.DefaultDurationHours, c.DefaultPrice, c.IsActive };
 
     private static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
 }

@@ -5,7 +5,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Rooms;
 
-public sealed class RoomService(IUnitOfWork uow) : IRoomService
+public sealed class RoomService(IUnitOfWork uow, IAuditLogger audit) : IRoomService
 {
     public async Task<RoomDto> GetByIdAsync(int id, CancellationToken ct = default)
     {
@@ -37,6 +37,9 @@ public sealed class RoomService(IUnitOfWork uow) : IRoomService
 
         await uow.Rooms.AddAsync(room, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("Room.Create", nameof(Room), room.Id, null, Snapshot(room), null, ct);
+        await uow.SaveChangesAsync(ct);
         return room.ToDto();
     }
 
@@ -48,16 +51,22 @@ public sealed class RoomService(IUnitOfWork uow) : IRoomService
         if (await uow.Rooms.NameExistsAsync(name, id, ct))
             throw new ConflictException($"A room named '{name}' already exists.");
 
+        var before = Snapshot(room);
+
         room.Name = name;
         room.Capacity = request.Capacity;
         room.Description = request.Description?.Trim();
         room.Location = request.Location?.Trim();
         room.IsActive = request.IsActive;
 
+        await audit.LogAsync("Room.Update", nameof(Room), room.Id, before, Snapshot(room), null, ct);
+
         uow.Rooms.Update(room);
         await uow.SaveChangesAsync(ct);
         return room.ToDto();
     }
+
+    private static object Snapshot(Room r) => new { r.Name, r.Capacity, r.Description, r.Location, r.IsActive };
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
@@ -65,6 +74,8 @@ public sealed class RoomService(IUnitOfWork uow) : IRoomService
 
         if (await uow.Rooms.IsInUseAsync(id, ct))
             throw new ConflictException("This room is used by sections or sessions and cannot be deleted. Deactivate it instead.");
+
+        await audit.LogAsync("Room.Delete", nameof(Room), room.Id, Snapshot(room), null, null, ct);
 
         uow.Rooms.Remove(room);
         await uow.SaveChangesAsync(ct);
