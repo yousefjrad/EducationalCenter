@@ -11,6 +11,10 @@ public sealed class AuditLogService(IUnitOfWork uow) : IAuditLogService
             query.UserId, query.EntityName?.Trim(), query.EntityId, query.Action?.Trim(),
             query.From, query.To, query.Page, query.PageSize, ct);
 
-        return new PagedResult<AuditLogDto>(items.Select(a => a.ToDto()).ToList(), total, query.Page, query.PageSize);
+        var branchNames = (await uow.Branches.ListAsync(ct)).ToDictionary(b => b.Id, b => b.Name);
+
+        return new PagedResult<AuditLogDto>(
+            items.Select(a => a.ToDto(a.BranchId is int bid && branchNames.TryGetValue(bid, out var bn) ? bn : null)).ToList(),
+            total, query.Page, query.PageSize);
     }
 }

@@ -12,7 +12,9 @@ public sealed record AuditLogDto(
     string? OldValues,
     string? NewValues,
     string? Reason,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    int? BranchId = null,
+    string? BranchName = null);
 
 public sealed record AuditLogListQuery(
     int? UserId = null,
