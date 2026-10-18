@@ -15,7 +15,8 @@ public sealed record PayrollDto(
     decimal AmountInSyp,
     PayrollStatus Status,
     DateTime? PaidAt,
-    int? PaidByUserId);
+    int? PaidByUserId,
+    int BranchId = 0);
 
 /// <summary>What the system would pay for the period, with the figures behind it. Nothing is saved.</summary>
 public sealed record PayrollCalculationDto(

@@ -10,7 +10,8 @@ public sealed record CertificateDto(
     string CertificateNumber,
     DateTime IssuedAt,
     bool IsOverride,
-    string? OverrideReason);
+    string? OverrideReason,
+    int BranchId = 0);
 
 public sealed record CertificateEligibilityDto(
     int EnrollmentId,

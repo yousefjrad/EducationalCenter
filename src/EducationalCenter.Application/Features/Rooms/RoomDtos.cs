@@ -1,6 +1,6 @@
 namespace EducationalCenter.Application.Features.Rooms;
 
-public sealed record RoomDto(int Id, string Name, int Capacity, string? Description, string? Location, bool IsActive);
+public sealed record RoomDto(int Id, string Name, int Capacity, string? Description, string? Location, bool IsActive, int BranchId = 0);
 
 public sealed record CreateRoomRequest(string Name, int Capacity, string? Description, string? Location);
 

@@ -18,7 +18,8 @@ public sealed record PaymentDto(
     PaymentStatus Status,
     string? CancelReason,
     int? ReceiptId,
-    string? ReceiptNumber);
+    string? ReceiptNumber,
+    int BranchId = 0);
 
 /// <param name="ExchangeRate">SYP per 1 USD, entered by the receptionist. Required for USD, must be empty for SYP.</param>
 public sealed record RecordPaymentRequest(

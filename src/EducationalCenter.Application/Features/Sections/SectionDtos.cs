@@ -19,7 +19,8 @@ public sealed record SectionDto(
     int Capacity,
     int MinStudents,
     SectionStatus Status,
-    IReadOnlyList<SectionScheduleDto> Schedules);
+    IReadOnlyList<SectionScheduleDto> Schedules,
+    int BranchId = 0);
 
 /// <param name="Price">Optional: defaults to the course's default price.</param>
 public sealed record CreateSectionRequest(

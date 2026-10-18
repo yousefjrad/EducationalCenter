@@ -16,5 +16,6 @@ public static class EnrollmentMappings
         e.Status,
         e.EnrolledAt,
         e.HoldExpiresAt,
-        e.TransferredFromEnrollmentId);
+        e.TransferredFromEnrollmentId,
+        e.BranchId);
 }

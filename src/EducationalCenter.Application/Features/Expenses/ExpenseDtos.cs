@@ -11,7 +11,8 @@ public sealed record ExpenseDto(
     decimal? ExchangeRate,
     decimal AmountInSyp,
     DateOnly ExpenseDate,
-    int RecordedByUserId);
+    int RecordedByUserId,
+    int BranchId = 0);
 
 /// <param name="Category">Free text (rent, electricity, supplies...). Existing categories are offered as suggestions.</param>
 /// <param name="ExchangeRate">SYP per 1 USD. Required for USD, must be empty for SYP.</param>

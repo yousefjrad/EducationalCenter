@@ -23,5 +23,6 @@ public static class SectionMappings
         s.Schedules
             .OrderBy(x => x.DayOfWeek).ThenBy(x => x.StartTime)
             .Select(x => new SectionScheduleDto(x.DayOfWeek, x.StartTime, x.EndTime))
-            .ToList());
+            .ToList(),
+        s.BranchId);
 }

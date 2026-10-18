@@ -25,6 +25,7 @@ public static class PaymentMappings
             p.Status,
             p.CancelReason,
             p.Receipt?.Id,
-            p.Receipt?.ReceiptNumber);
+            p.Receipt?.ReceiptNumber,
+            p.BranchId);
     }
 }

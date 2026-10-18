@@ -15,5 +15,6 @@ public static class CertificateMappings
         c.CertificateNumber,
         c.IssuedAt,
         c.IsOverride,
-        c.OverrideReason);
+        c.OverrideReason,
+        c.BranchId);
 }

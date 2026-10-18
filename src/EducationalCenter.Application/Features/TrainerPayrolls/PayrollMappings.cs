@@ -18,5 +18,6 @@ public static class PayrollMappings
         p.AmountInSyp,
         p.Status,
         p.PaidAt,
-        p.PaidByUserId);
+        p.PaidByUserId,
+        p.BranchId);
 }

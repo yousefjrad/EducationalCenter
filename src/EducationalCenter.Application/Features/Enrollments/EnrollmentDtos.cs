@@ -13,7 +13,8 @@ public sealed record EnrollmentDto(
     EnrollmentStatus Status,
     DateTime EnrolledAt,
     DateTime? HoldExpiresAt,
-    int? TransferredFromEnrollmentId);
+    int? TransferredFromEnrollmentId,
+    int BranchId = 0);
 
 /// <param name="AsHold">
 /// False: direct enrollment by the receptionist (Confirmed).
