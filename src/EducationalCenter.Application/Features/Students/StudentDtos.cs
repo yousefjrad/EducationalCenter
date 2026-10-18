@@ -1,6 +1,6 @@
 namespace EducationalCenter.Application.Features.Students;
 
-public sealed record StudentDto(int Id, string FullName, string PhoneNumber, bool IsActive);
+public sealed record StudentDto(int Id, string FullName, string PhoneNumber, bool IsActive, int BranchId = 0);
 
 public sealed record CreateStudentRequest(string FullName, string PhoneNumber);
 

@@ -8,7 +8,8 @@ public sealed record CourseDto(
     string? Level,
     int DefaultDurationHours,
     decimal DefaultPrice,
-    bool IsActive);
+    bool IsActive,
+    IReadOnlyList<int>? BranchIds = null);
 
 public sealed record CreateCourseRequest(
     string Code,

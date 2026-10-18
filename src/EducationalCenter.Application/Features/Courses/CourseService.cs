@@ -20,7 +20,11 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext,
             ? await uow.Courses.SearchInBranchAsync(query.Search?.Trim(), query.IsActive, branchId, query.Page, query.PageSize, ct)
             : await uow.Courses.SearchAsync(query.Search?.Trim(), query.IsActive, query.Page, query.PageSize, ct);
 
-        var dtos = items.Select(c => c.ToDto()).ToList();
+        var branchIds = branchContext.IsSuperAdmin
+            ? await uow.BranchLinks.GetCourseBranchIdsAsync(items.Select(c => c.Id).ToList(), ct)
+            : new Dictionary<int, IReadOnlyList<int>>();
+
+        var dtos = items.Select(c => c.ToDto(branchIds.TryGetValue(c.Id, out var b) ? b : null)).ToList();
         return new PagedResult<CourseDto>(dtos, total, query.Page, query.PageSize);
     }
 

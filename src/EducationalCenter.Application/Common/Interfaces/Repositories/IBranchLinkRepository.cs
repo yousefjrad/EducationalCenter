@@ -24,4 +24,10 @@ public interface IBranchLinkRepository
 
     /// <summary>The trainer has sections, sessions or payroll in that branch (so the link must stay).</summary>
     Task<bool> TrainerHasWorkInBranchAsync(int trainerId, int branchId, CancellationToken ct = default);
+
+    /// <summary>The branches each trainer teaches at (trainer id to branch ids).</summary>
+    Task<IReadOnlyDictionary<int, IReadOnlyList<int>>> GetTrainerBranchIdsAsync(IReadOnlyCollection<int> trainerIds, CancellationToken ct = default);
+
+    /// <summary>The branches that offer each course (active links only).</summary>
+    Task<IReadOnlyDictionary<int, IReadOnlyList<int>>> GetCourseBranchIdsAsync(IReadOnlyCollection<int> courseIds, CancellationToken ct = default);
 }

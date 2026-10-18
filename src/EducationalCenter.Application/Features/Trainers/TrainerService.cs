@@ -16,7 +16,13 @@ public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext
             ? await uow.Trainers.SearchInBranchAsync(query.Search?.Trim(), query.IsActive, branchId, query.Page, query.PageSize, ct)
             : await uow.Trainers.SearchAsync(query.Search?.Trim(), query.IsActive, query.Page, query.PageSize, ct);
 
-        return new PagedResult<TrainerDto>(items.Select(t => t.ToDto()).ToList(), total, query.Page, query.PageSize);
+        var branchIds = branchContext.IsSuperAdmin
+            ? await uow.BranchLinks.GetTrainerBranchIdsAsync(items.Select(t => t.Id).ToList(), ct)
+            : new Dictionary<int, IReadOnlyList<int>>();
+
+        return new PagedResult<TrainerDto>(
+            items.Select(t => t.ToDto(branchIds.TryGetValue(t.Id, out var b) ? b : null)).ToList(),
+            total, query.Page, query.PageSize);
     }
 
     /// <remarks>A trainer created inside a branch is linked to it automatically (see AppDbContext).</remarks>

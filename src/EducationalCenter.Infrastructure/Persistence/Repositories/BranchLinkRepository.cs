@@ -35,6 +35,26 @@ internal sealed class BranchLinkRepository(AppDbContext db) : IBranchLinkReposit
 
     public void RemoveTrainerLink(TrainerBranch link) => db.TrainerBranches.Remove(link);
 
+    public async Task<IReadOnlyDictionary<int, IReadOnlyList<int>>> GetTrainerBranchIdsAsync(IReadOnlyCollection<int> trainerIds, CancellationToken ct = default)
+    {
+        var rows = await db.TrainerBranches.AsNoTracking()
+            .Where(x => trainerIds.Contains(x.TrainerId))
+            .Select(x => new { x.TrainerId, x.BranchId })
+            .ToListAsync(ct);
+        return rows.GroupBy(x => x.TrainerId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<int>)g.Select(x => x.BranchId).OrderBy(b => b).ToList());
+    }
+
+    public async Task<IReadOnlyDictionary<int, IReadOnlyList<int>>> GetCourseBranchIdsAsync(IReadOnlyCollection<int> courseIds, CancellationToken ct = default)
+    {
+        var rows = await db.BranchCourses.AsNoTracking()
+            .Where(x => x.IsActive && courseIds.Contains(x.CourseId))
+            .Select(x => new { x.CourseId, x.BranchId })
+            .ToListAsync(ct);
+        return rows.GroupBy(x => x.CourseId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<int>)g.Select(x => x.BranchId).OrderBy(b => b).ToList());
+    }
+
     public async Task<bool> TrainerHasWorkInBranchAsync(int trainerId, int branchId, CancellationToken ct = default) =>
         await db.Sections.IgnoreQueryFilters().AnyAsync(s => s.TrainerId == trainerId && s.BranchId == branchId && !s.IsDeleted, ct)
         || await db.ClassSessions.IgnoreQueryFilters().AnyAsync(s => s.TrainerId == trainerId && s.BranchId == branchId && !s.IsDeleted, ct)

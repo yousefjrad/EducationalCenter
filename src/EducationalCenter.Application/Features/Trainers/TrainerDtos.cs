@@ -10,7 +10,8 @@ public sealed record TrainerDto(
     TrainerPayType PayType,
     decimal PayValue,
     Currency PayCurrency,
-    bool IsActive);
+    bool IsActive,
+    IReadOnlyList<int>? BranchIds = null);
 
 public sealed record CreateTrainerRequest(
     string FullName,
