@@ -30,4 +30,10 @@ public interface IBranchLinkRepository
 
     /// <summary>The branches that offer each course (active links only).</summary>
     Task<IReadOnlyDictionary<int, IReadOnlyList<int>>> GetCourseBranchIdsAsync(IReadOnlyCollection<int> courseIds, CancellationToken ct = default);
+
+    /// <summary>The course is active in another branch, or has sections in another branch (a null branch means: any branch).</summary>
+    Task<bool> IsCourseUsedByOtherBranchesAsync(int courseId, int? exceptBranchId, CancellationToken ct = default);
+
+    /// <summary>The trainer is linked to another branch (a null branch means: any branch).</summary>
+    Task<bool> IsTrainerUsedByOtherBranchesAsync(int trainerId, int? exceptBranchId, CancellationToken ct = default);
 }

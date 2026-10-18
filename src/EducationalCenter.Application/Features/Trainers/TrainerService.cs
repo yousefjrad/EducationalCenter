@@ -5,7 +5,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Trainers;
 
-public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext) : ITrainerService
+public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext, IAuditLogger audit) : ITrainerService
 {
     public async Task<TrainerDto> GetByIdAsync(int id, CancellationToken ct = default) =>
         (await FindAsync(id, ct)).ToDto();
@@ -67,6 +67,11 @@ public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext
 
         if (await uow.Trainers.IsInUseAsync(id, ct))
             throw new ConflictException("This trainer has sections, sessions or payroll records and cannot be deleted. Deactivate them instead.");
+
+        if (await uow.BranchLinks.IsTrainerUsedByOtherBranchesAsync(id, branchContext.BranchId, ct))
+            throw new ConflictException("This trainer also teaches at other branches and cannot be deleted. Deactivate them instead.");
+
+        await audit.LogAsync("Trainer.Delete", nameof(Trainer), trainer.Id, new { trainer.FullName, trainer.PhoneNumber, trainer.Specialty }, null, null, ct);
 
         uow.Trainers.Remove(trainer);
         await uow.SaveChangesAsync(ct);

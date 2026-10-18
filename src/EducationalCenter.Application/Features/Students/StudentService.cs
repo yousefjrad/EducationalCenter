@@ -104,6 +104,8 @@ public sealed class StudentService(IUnitOfWork uow, IClock clock, IAuditLogger a
         if (await uow.Students.HasEnrollmentsAsync(id, ct))
             throw new ConflictException("This student has enrollments and cannot be deleted. Deactivate them instead.");
 
+        await audit.LogAsync("Student.Delete", nameof(Student), student.Id, new { student.FullName, student.PhoneNumber, student.BranchId }, null, null, ct);
+
         uow.Students.Remove(student);
         await uow.SaveChangesAsync(ct);
     }

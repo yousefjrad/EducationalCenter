@@ -86,6 +86,9 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext,
         if (await uow.Courses.HasSectionsAsync(id, ct))
             throw new ConflictException("This course has sections and cannot be deleted. Deactivate it instead.");
 
+        if (await uow.BranchLinks.IsCourseUsedByOtherBranchesAsync(id, branchContext.BranchId, ct))
+            throw new ConflictException("This course is also used by other branches and cannot be deleted. Deactivate it instead.");
+
         await audit.LogAsync("Course.Delete", nameof(Course), course.Id, Snapshot(course), null, null, ct);
 
         uow.Courses.Remove(course);

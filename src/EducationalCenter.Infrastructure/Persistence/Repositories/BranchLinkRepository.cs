@@ -33,6 +33,13 @@ internal sealed class BranchLinkRepository(AppDbContext db) : IBranchLinkReposit
     public async Task AddTrainerLinkAsync(TrainerBranch link, CancellationToken ct = default) =>
         await db.TrainerBranches.AddAsync(link, ct);
 
+    public async Task<bool> IsCourseUsedByOtherBranchesAsync(int courseId, int? exceptBranchId, CancellationToken ct = default) =>
+        await db.BranchCourses.AnyAsync(x => x.CourseId == courseId && x.IsActive && (exceptBranchId == null || x.BranchId != exceptBranchId), ct)
+        || await db.Sections.IgnoreQueryFilters().AnyAsync(s => s.CourseId == courseId && !s.IsDeleted && (exceptBranchId == null || s.BranchId != exceptBranchId), ct);
+
+    public Task<bool> IsTrainerUsedByOtherBranchesAsync(int trainerId, int? exceptBranchId, CancellationToken ct = default) =>
+        db.TrainerBranches.AnyAsync(x => x.TrainerId == trainerId && (exceptBranchId == null || x.BranchId != exceptBranchId), ct);
+
     public void RemoveTrainerLink(TrainerBranch link) => db.TrainerBranches.Remove(link);
 
     public async Task<IReadOnlyDictionary<int, IReadOnlyList<int>>> GetTrainerBranchIdsAsync(IReadOnlyCollection<int> trainerIds, CancellationToken ct = default)
