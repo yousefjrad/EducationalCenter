@@ -68,6 +68,7 @@ public sealed class ExpenseService(
         return uow.ExecuteInTransactionAsync(async () =>
         {
             var expense = await uow.Expenses.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Expense), id);
+            expense.ExpectedRowVersion = EducationalCenter.Application.Common.Services.RowVersionCodec.Decode(request.RowVersion);
             EnsureNotInFuture(request.ExpenseDate);
 
             var before = Snapshot(expense);

@@ -46,6 +46,7 @@ public sealed class RoomService(IUnitOfWork uow, IAuditLogger audit) : IRoomServ
     public async Task<RoomDto> UpdateAsync(int id, UpdateRoomRequest request, CancellationToken ct = default)
     {
         var room = await uow.Rooms.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Room), id);
+        room.ExpectedRowVersion = EducationalCenter.Application.Common.Services.RowVersionCodec.Decode(request.RowVersion);
 
         var name = request.Name.Trim();
         if (await uow.Rooms.NameExistsAsync(name, id, ct))

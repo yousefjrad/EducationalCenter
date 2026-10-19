@@ -12,7 +12,8 @@ public sealed record ExpenseDto(
     decimal AmountInSyp,
     DateOnly ExpenseDate,
     int RecordedByUserId,
-    int BranchId = 0);
+    int BranchId = 0,
+    string? RowVersion = null);
 
 /// <param name="Category">Free text (rent, electricity, supplies...). Existing categories are offered as suggestions.</param>
 /// <param name="ExchangeRate">SYP per 1 USD. Required for USD, must be empty for SYP.</param>
@@ -30,7 +31,8 @@ public sealed record UpdateExpenseRequest(
     Currency Currency,
     decimal Amount,
     decimal? ExchangeRate,
-    DateOnly ExpenseDate);
+    DateOnly ExpenseDate,
+    string? RowVersion = null);
 
 public sealed record ExpenseListQuery(
     string? Category = null,

@@ -86,6 +86,8 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock, IAuditLogger a
         var section = await uow.Sections.GetWithDetailsAsync(id, ct)
             ?? throw new NotFoundException(nameof(Section), id);
 
+        section.ExpectedRowVersion = EducationalCenter.Application.Common.Services.RowVersionCodec.Decode(request.RowVersion);
+
         if (section.Status is SectionStatus.Completed or SectionStatus.Cancelled)
             throw new ConflictException("A completed or cancelled section cannot be modified.");
 
