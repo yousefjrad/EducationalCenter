@@ -55,6 +55,7 @@ public static class SystemRoles
         Permissions.Sections.Create, Permissions.Sections.Update,
         Permissions.Budgets.View, Permissions.Budgets.Request,
         Permissions.Courses.Create, Permissions.Courses.Update,
+        Permissions.Trainers.Create, Permissions.Trainers.Update,
         Permissions.Branches.View,
     ];
 }
