@@ -39,6 +39,7 @@ public sealed class StudentService(IUnitOfWork uow, IClock clock, IAuditLogger a
     public async Task<StudentDto> UpdateAsync(int id, UpdateStudentRequest request, CancellationToken ct = default)
     {
         var student = await uow.Students.GetByIdAsync(id, ct) ?? throw new NotFoundException(nameof(Student), id);
+        student.ExpectedRowVersion = RowVersionCodec.Decode(request.RowVersion);
 
         var name = request.FullName.Trim();
         var phone = request.PhoneNumber.Trim();

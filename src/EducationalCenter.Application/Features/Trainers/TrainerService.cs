@@ -1,5 +1,6 @@
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Application.Common.Models;
+using EducationalCenter.Application.Common.Services;
 using EducationalCenter.Domain.Entities;
 using EducationalCenter.Domain.Exceptions;
 
@@ -50,6 +51,7 @@ public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext
     public async Task<TrainerDto> UpdateAsync(int id, UpdateTrainerRequest request, CancellationToken ct = default)
     {
         var trainer = await FindAsync(id, ct);
+        trainer.ExpectedRowVersion = RowVersionCodec.Decode(request.RowVersion);
         var before = Snapshot(trainer);
 
         trainer.FullName = request.FullName.Trim();

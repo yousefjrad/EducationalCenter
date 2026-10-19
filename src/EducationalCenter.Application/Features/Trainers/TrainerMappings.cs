@@ -1,3 +1,4 @@
+using EducationalCenter.Application.Common.Services;
 using EducationalCenter.Domain.Entities;
 
 namespace EducationalCenter.Application.Features.Trainers;
@@ -5,5 +6,5 @@ namespace EducationalCenter.Application.Features.Trainers;
 public static class TrainerMappings
 {
     public static TrainerDto ToDto(this Trainer t, IReadOnlyList<int>? branchIds = null) => new(
-        t.Id, t.FullName, t.PhoneNumber, t.Specialty, t.PayType, t.PayValue, t.PayCurrency, t.IsActive, branchIds);
+        t.Id, t.FullName, t.PhoneNumber, t.Specialty, t.PayType, t.PayValue, t.PayCurrency, t.IsActive, branchIds, RowVersionCodec.Encode(t.RowVersion));
 }

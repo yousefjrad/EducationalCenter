@@ -1,5 +1,6 @@
 using EducationalCenter.Application.Common.Interfaces;
 using EducationalCenter.Application.Common.Models;
+using EducationalCenter.Application.Common.Services;
 using EducationalCenter.Domain.Entities;
 using EducationalCenter.Domain.Exceptions;
 
@@ -57,6 +58,7 @@ public sealed class CourseService(IUnitOfWork uow, IBranchContext branchContext,
     public async Task<CourseDto> UpdateAsync(int id, UpdateCourseRequest request, CancellationToken ct = default)
     {
         var course = await FindAsync(id, ct);
+        course.ExpectedRowVersion = RowVersionCodec.Decode(request.RowVersion);
 
         var code = NormalizeCode(request.Code);
         if (await uow.Courses.CodeExistsAsync(code, id, ct))

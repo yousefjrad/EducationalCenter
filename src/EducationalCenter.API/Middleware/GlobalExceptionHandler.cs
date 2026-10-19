@@ -55,6 +55,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             FeatureUnavailableException => (StatusCodes.Status501NotImplemented, "Not available", exception.Message, null),
             BadHttpRequestException bad => (bad.StatusCode, "Bad request", bad.Message, null),
 
+            // Someone else changed the record after it was opened.
+            DbUpdateConcurrencyException =>
+                (StatusCodes.Status409Conflict, "Conflict",
+                    "This record was changed by another user. Reload and try again. / تم تعديل هذا السجل من مستخدم آخر. أعد تحميل الصفحة ثم حاول مجدداً.", null),
+
             // Two people saved something that must be unique at the same moment.
             DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } } =>
                 (StatusCodes.Status409Conflict, "Conflict", "This value already exists.", null),

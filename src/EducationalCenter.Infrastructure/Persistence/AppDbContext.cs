@@ -61,6 +61,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranch
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         ConfigureBranches(modelBuilder);
+        ConfigureConcurrency(modelBuilder);
 
         ApplySoftDeleteFilters(modelBuilder);
         ApplyBranchFilters(modelBuilder);
@@ -93,6 +94,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranch
     {
         StampBranch();
         EnsureBranchesOpen();
+        ApplyExpectedVersions();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
@@ -100,6 +102,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranch
     {
         StampBranch();
         EnsureBranchesOpen();
+        ApplyExpectedVersions();
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
@@ -140,6 +143,33 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IBranch
             {
                 log.BranchId = scoped;
             }
+        }
+    }
+
+    /// <summary>Every BaseEntity carries a row version so two people cannot silently overwrite each other.</summary>
+    private static void ConfigureConcurrency(ModelBuilder modelBuilder)
+    {
+        foreach (var type in modelBuilder.Model.GetEntityTypes()
+                     .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType))
+                     .Select(t => t.ClrType)
+                     .ToList())
+        {
+            var builder = modelBuilder.Entity(type);
+            builder.Property(nameof(BaseEntity.RowVersion)).IsRowVersion();
+            builder.Ignore(nameof(BaseEntity.ExpectedRowVersion));
+        }
+    }
+
+    /// <summary>
+    /// When the caller says which version of a row it edited, the update is checked against that version:
+    /// a row changed by someone else in the meantime raises DbUpdateConcurrencyException.
+    /// </summary>
+    private void ApplyExpectedVersions()
+    {
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>().Where(e => e.State is EntityState.Modified or EntityState.Deleted))
+        {
+            if (entry.Entity.ExpectedRowVersion is { Length: > 0 } expected)
+                entry.Property(nameof(BaseEntity.RowVersion)).OriginalValue = expected;
         }
     }
 

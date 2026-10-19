@@ -9,7 +9,8 @@ public sealed record CourseDto(
     int DefaultDurationHours,
     decimal DefaultPrice,
     bool IsActive,
-    IReadOnlyList<int>? BranchIds = null);
+    IReadOnlyList<int>? BranchIds = null,
+    string? RowVersion = null);
 
 public sealed record CreateCourseRequest(
     string Code,
@@ -26,7 +27,8 @@ public sealed record UpdateCourseRequest(
     string? Level,
     int DefaultDurationHours,
     decimal DefaultPrice,
-    bool IsActive);
+    bool IsActive,
+    string? RowVersion = null);
 
 public sealed record CourseListQuery(
     string? Search = null,

@@ -11,7 +11,8 @@ public sealed record TrainerDto(
     decimal PayValue,
     Currency PayCurrency,
     bool IsActive,
-    IReadOnlyList<int>? BranchIds = null);
+    IReadOnlyList<int>? BranchIds = null,
+    string? RowVersion = null);
 
 public sealed record CreateTrainerRequest(
     string FullName,
@@ -28,6 +29,7 @@ public sealed record UpdateTrainerRequest(
     TrainerPayType PayType,
     decimal PayValue,
     Currency PayCurrency,
-    bool IsActive);
+    bool IsActive,
+    string? RowVersion = null);
 
 public sealed record TrainerListQuery(string? Search = null, bool? IsActive = null, int Page = 1, int PageSize = 20);
