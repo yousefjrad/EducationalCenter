@@ -13,6 +13,7 @@ public sealed class CertificateService(
     IUnitOfWork uow,
     IClock clock,
     ICurrentUser currentUser,
+    IAuditLogger audit,
     ICertificatePdfGenerator pdfGenerator) : ICertificateService
 {
     public async Task<CertificateDto> GetByIdAsync(int id, CancellationToken ct = default)
@@ -129,6 +130,11 @@ public sealed class CertificateService(
             };
 
             await uow.Certificates.AddAsync(certificate, ct);
+            await uow.SaveChangesAsync(ct);
+
+            await audit.LogAsync(bypassed ? "Certificate.IssueOverride" : "Certificate.Issue", nameof(Certificate), certificate.Id, null,
+                new { certificate.CertificateNumber, certificate.EnrollmentId, StudentName = enrollment.Student.FullName, certificate.IsOverride },
+                bypassed ? overrideReason?.Trim() : null, ct);
             await uow.SaveChangesAsync(ct);
             return certificate.ToDto(enrollment);
         }, ct);

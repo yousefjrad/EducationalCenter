@@ -6,7 +6,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Grades;
 
-public sealed class GradeService(IUnitOfWork uow, ISettingsProvider settings, ICurrentUser currentUser) : IGradeService
+public sealed class GradeService(IUnitOfWork uow, ISettingsProvider settings, ICurrentUser currentUser, IAuditLogger audit) : IGradeService
 {
     /// <summary>"PassingScore" is a percentage of the maximum score.</summary>
     private const int DefaultPassingScore = 60;
@@ -31,6 +31,7 @@ public sealed class GradeService(IUnitOfWork uow, ISettingsProvider settings, IC
             var isPassed = percentage >= passingScore;
 
             var grade = enrollment.Grade;
+            object? before = grade is null ? null : new { grade.Score, grade.MaxScore, grade.IsPassed };
             if (grade is null)
             {
                 grade = new Grade
@@ -53,6 +54,10 @@ public sealed class GradeService(IUnitOfWork uow, ISettingsProvider settings, IC
                 uow.Grades.Update(grade);
             }
 
+            await uow.SaveChangesAsync(ct);
+
+            await audit.LogAsync(before is null ? "Grade.Record" : "Grade.Update", nameof(Grade), grade.Id, before,
+                new { grade.Score, grade.MaxScore, grade.IsPassed, StudentName = enrollment.Student.FullName }, null, ct);
             await uow.SaveChangesAsync(ct);
             return grade.ToDto(enrollment);
         }, ct);

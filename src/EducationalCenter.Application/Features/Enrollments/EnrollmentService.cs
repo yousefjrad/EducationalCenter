@@ -8,7 +8,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Enrollments;
 
-public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsProvider settings) : IEnrollmentService
+public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsProvider settings, IAuditLogger audit) : IEnrollmentService
 {
     private const int DefaultHoldHours = 24;
 
@@ -76,6 +76,11 @@ public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsPr
             await ResolveWaitingEntryAsync(student.Id, section.Id, enrollment, ct);
             await uow.SaveChangesAsync(ct);
 
+            await audit.LogAsync("Enrollment.Create", nameof(Enrollment), enrollment.Id, null,
+                new { enrollment.StudentId, StudentName = student.FullName, enrollment.SectionId, SectionName = section.Name, enrollment.AgreedPrice, Status = enrollment.Status.ToString() },
+                null, ct);
+            await uow.SaveChangesAsync(ct);
+
             return enrollment.ToDto();
         }, ct);
     }
@@ -104,6 +109,9 @@ public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsPr
                     throw new ConflictException("The hold expired and the section is now full.");
             }
 
+            await audit.LogAsync("Enrollment.Confirm", nameof(Enrollment), enrollment.Id,
+                new { Status = enrollment.Status.ToString() }, new { Status = nameof(EnrollmentStatus.Confirmed) }, null, ct);
+
             enrollment.Status = EnrollmentStatus.Confirmed;
             enrollment.HoldExpiresAt = null;
 
@@ -125,6 +133,9 @@ public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsPr
 
             if (enrollment.Certificate is not null)
                 throw new ConflictException("A certificate was issued for this enrollment, so it cannot be cancelled.");
+
+            await audit.LogAsync("Enrollment.Cancel", nameof(Enrollment), enrollment.Id,
+                new { Status = enrollment.Status.ToString() }, new { Status = nameof(EnrollmentStatus.Cancelled) }, null, ct);
 
             enrollment.Status = EnrollmentStatus.Cancelled;
             enrollment.HoldExpiresAt = null;
@@ -196,6 +207,10 @@ public sealed class EnrollmentService(IUnitOfWork uow, IClock clock, ISettingsPr
                 source.PaymentPlan.Enrollment = transferred;
 
             await ResolveWaitingEntryAsync(source.StudentId, target.Id, transferred, ct);
+            await uow.SaveChangesAsync(ct);
+
+            await audit.LogAsync("Enrollment.Transfer", nameof(Enrollment), source.Id,
+                new { source.SectionId }, new { SectionId = target.Id, NewEnrollmentId = transferred.Id }, null, ct);
             await uow.SaveChangesAsync(ct);
 
             return transferred.ToDto();

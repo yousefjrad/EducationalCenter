@@ -7,7 +7,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.ClassSessions;
 
-public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
+public sealed class ClassSessionService(IUnitOfWork uow, IAuditLogger audit) : IClassSessionService
 {
     public async Task<ClassSessionDto> GetByIdAsync(int id, CancellationToken ct = default)
     {
@@ -86,6 +86,8 @@ public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
             }
 
             await uow.ClassSessions.AddRangeAsync(candidates, ct);
+            await audit.LogAsync("ClassSession.Generate", nameof(Section), section.Id, null,
+                new { Sessions = candidates.Count, From = Fmt(section.StartDate), To = Fmt(section.EndDate) }, null, ct);
             await uow.SaveChangesAsync(ct);
         }, ct);
 
@@ -127,6 +129,9 @@ public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
 
         await uow.ClassSessions.AddAsync(session, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("ClassSession.Create", nameof(ClassSession), session.Id, null, Snapshot(session), null, ct);
+        await uow.SaveChangesAsync(ct);
         return session.ToDto();
     }
 
@@ -145,6 +150,8 @@ public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
 
         await EnsureNoConflictsAsync(room.Id, trainer.Id, request.Date, request.StartTime, request.EndTime, id, ct);
 
+        var before = Snapshot(session);
+
         session.Date = request.Date;
         session.StartTime = request.StartTime;
         session.EndTime = request.EndTime;
@@ -153,6 +160,8 @@ public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
         session.TrainerId = trainer.Id;
         session.Trainer = trainer;
         session.Notes = request.Notes?.Trim();
+
+        await audit.LogAsync("ClassSession.Update", nameof(ClassSession), session.Id, before, Snapshot(session), null, ct);
 
         uow.ClassSessions.Update(session);
         await uow.SaveChangesAsync(ct);
@@ -194,6 +203,10 @@ public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
             uow.ClassSessions.Update(session);
             await uow.ClassSessions.AddAsync(replacement, ct);
             await uow.SaveChangesAsync(ct);
+
+            await audit.LogAsync("ClassSession.Postpone", nameof(ClassSession), session.Id,
+                new { Date = Fmt(session.Date) }, new { NewDate = Fmt(request.NewDate), ReplacementId = replacement.Id }, request.Reason, ct);
+            await uow.SaveChangesAsync(ct);
         }, ct);
 
         return replacement.ToDto();
@@ -206,6 +219,9 @@ public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
 
         if (session.Status != ClassSessionStatus.Scheduled)
             throw new ConflictException("Only scheduled sessions can be cancelled.");
+
+        await audit.LogAsync("ClassSession.Cancel", nameof(ClassSession), session.Id,
+            new { Status = session.Status.ToString() }, new { Status = nameof(ClassSessionStatus.Cancelled) }, request.Reason, ct);
 
         session.Status = ClassSessionStatus.Cancelled;
         session.Notes = AppendNote(session.Notes, "Cancelled", request.Reason);
@@ -252,6 +268,9 @@ public sealed class ClassSessionService(IUnitOfWork uow) : IClassSessionService
         var entry = string.IsNullOrWhiteSpace(reason) ? $"[{label}]" : $"[{label}] {reason.Trim()}";
         return string.IsNullOrWhiteSpace(notes) ? entry : $"{notes}{Environment.NewLine}{entry}";
     }
+
+    private static object Snapshot(ClassSession s) =>
+        new { s.SectionId, Date = Fmt(s.Date), Start = Fmt(s.StartTime), End = Fmt(s.EndTime), s.RoomId, s.TrainerId, Status = s.Status.ToString() };
 
     private static string Fmt(DateOnly d) => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     private static string Fmt(TimeOnly t) => t.ToString("HH:mm", CultureInfo.InvariantCulture);
