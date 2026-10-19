@@ -41,12 +41,16 @@ public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext
 
         await uow.Trainers.AddAsync(trainer, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("Trainer.Create", nameof(Trainer), trainer.Id, null, Snapshot(trainer), null, ct);
+        await uow.SaveChangesAsync(ct);
         return trainer.ToDto();
     }
 
     public async Task<TrainerDto> UpdateAsync(int id, UpdateTrainerRequest request, CancellationToken ct = default)
     {
         var trainer = await FindAsync(id, ct);
+        var before = Snapshot(trainer);
 
         trainer.FullName = request.FullName.Trim();
         trainer.PhoneNumber = request.PhoneNumber.Trim();
@@ -55,6 +59,8 @@ public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext
         trainer.PayValue = request.PayValue;
         trainer.PayCurrency = request.PayCurrency;
         trainer.IsActive = request.IsActive;
+
+        await audit.LogAsync("Trainer.Update", nameof(Trainer), trainer.Id, before, Snapshot(trainer), null, ct);
 
         uow.Trainers.Update(trainer);
         await uow.SaveChangesAsync(ct);
@@ -76,6 +82,9 @@ public sealed class TrainerService(IUnitOfWork uow, IBranchContext branchContext
         uow.Trainers.Remove(trainer);
         await uow.SaveChangesAsync(ct);
     }
+
+    private static object Snapshot(Trainer t) =>
+        new { t.FullName, t.PhoneNumber, t.Specialty, t.PayType, t.PayValue, t.PayCurrency, t.IsActive };
 
     /// <summary>Inside a branch, a trainer of another branch is reported as not found.</summary>
     private async Task<Trainer> FindAsync(int id, CancellationToken ct)
