@@ -66,6 +66,10 @@ public sealed class BranchLinkService(IUnitOfWork uow, IBranchContext branchCont
 
         var trainer = await uow.Trainers.GetByIdAsync(trainerId, ct) ?? throw new NotFoundException(nameof(Trainer), trainerId);
 
+        var linked = await uow.BranchLinks.GetTrainerBranchIdsAsync(new[] { trainerId }, ct);
+        if (linked.TryGetValue(trainerId, out var otherBranches) && otherBranches.Any(b => b != branchId))
+            throw new ConflictException("This trainer already belongs to another branch. A trainer belongs to one branch only.");
+
         if (await uow.BranchLinks.GetTrainerLinkAsync(trainerId, branchId, ct) is null)
         {
             await uow.BranchLinks.AddTrainerLinkAsync(new TrainerBranch { TrainerId = trainer.Id, Trainer = trainer, BranchId = branchId }, ct);

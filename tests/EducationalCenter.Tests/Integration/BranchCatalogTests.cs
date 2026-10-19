@@ -59,7 +59,12 @@ public sealed class BranchCatalogTests(AppFixture fx)
             Assert.Equal(0, (await trainers.ListAsync(new TrainerListQuery(name))).TotalCount);
             await Assert.ThrowsAsync<NotFoundException>(() => trainers.GetByIdAsync(trainer.Id));
 
+            // A trainer belongs to one branch only: it cannot be linked to a second one...
             SuperAdmin();
+            await Assert.ThrowsAsync<ConflictException>(() => RunLinksAsync(l => l.AddTrainerAsync(b2.Id, trainer.Id)));
+
+            // ...unless it is first released from the first branch.
+            await RunLinksAsync(l => l.RemoveTrainerAsync(1, trainer.Id));
             await RunLinksAsync(l => l.AddTrainerAsync(b2.Id, trainer.Id));
             InBranch(b2.Id);
             Assert.Equal(1, (await trainers.ListAsync(new TrainerListQuery(name))).TotalCount);
@@ -100,17 +105,12 @@ public sealed class BranchCatalogTests(AppFixture fx)
             await using var scope = fx.NewScope();
             var seeder = new Seeder(scope.ServiceProvider);
             var course = await seeder.CourseAsync();
-            var trainer = await seeder.TrainerAsync();
 
             InBranch(b2.Id);
+            var trainer = await seeder.TrainerAsync();
             var room = await seeder.RoomAsync();
 
-            // Neither the course nor the trainer belongs to branch 2 yet.
-            await Assert.ThrowsAsync<ConflictException>(() => seeder.SectionAsync(course, trainer, room));
-
-            SuperAdmin();
-            await RunLinksAsync(l => l.AddTrainerAsync(b2.Id, trainer.Id));
-            InBranch(b2.Id);
+            // The trainer belongs to branch 2 (created there) but the course is not offered there yet.
             await Assert.ThrowsAsync<ConflictException>(() => seeder.SectionAsync(course, trainer, room));
 
             SuperAdmin();
