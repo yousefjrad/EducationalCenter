@@ -12,7 +12,8 @@ public sealed class UserService(
     IUnitOfWork uow,
     IClock clock,
     IPasswordHasher hasher,
-    ICurrentUser currentUser) : IUserService
+    ICurrentUser currentUser,
+    IAuditLogger audit) : IUserService
 {
     public async Task<UserDto> GetByIdAsync(int id, CancellationToken ct = default)
     {
@@ -52,6 +53,9 @@ public sealed class UserService(
 
         await uow.Users.AddAsync(user, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("User.Create", "User", user.Id, null, Snap(user), null, ct);
+        await uow.SaveChangesAsync(ct);
         return user.ToDto();
     }
 
@@ -81,6 +85,8 @@ public sealed class UserService(
 
         var reactivated = !user.IsActive && request.IsActive;
 
+        var before = Snap(user);
+
         user.FullName = request.FullName.Trim();
         user.Email = email;
         user.RoleId = role.Id;
@@ -98,6 +104,7 @@ public sealed class UserService(
         if (sessionsMustEnd)
             await RefreshTokenRevoker.RevokeAllAsync(uow, user.Id, clock.UtcNow, ct);
 
+        await audit.LogAsync("User.Update", "User", user.Id, before, Snap(user), null, ct);
         await uow.SaveChangesAsync(ct);
         return user.ToDto();
     }
@@ -108,6 +115,8 @@ public sealed class UserService(
 
         user.FailedLoginCount = 0;
         user.LockedUntil = null;
+
+        await audit.LogAsync("User.Unlock", "User", user.Id, null, null, null, ct);
         await uow.SaveChangesAsync(ct);
 
         return user.ToDto();
@@ -124,8 +133,12 @@ public sealed class UserService(
         user.PasswordHash = hasher.Hash(request.NewPassword);
         await RefreshTokenRevoker.RevokeAllAsync(uow, user.Id, clock.UtcNow, ct);
 
+        await audit.LogAsync("User.ResetPassword", "User", user.Id, null, null, null, ct);
         await uow.SaveChangesAsync(ct);
     }
+
+    private static object Snap(User u) =>
+        new { u.FullName, u.Email, Role = u.Role?.Name, u.BranchId, u.IsActive };
 
     /// <summary>The system must always keep at least one active Admin.</summary>
     private async Task EnsureNotLastAdminAsync(User user, Role newRole, bool newIsActive, CancellationToken ct)

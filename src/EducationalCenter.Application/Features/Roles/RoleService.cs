@@ -5,7 +5,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Roles;
 
-public sealed class RoleService(IUnitOfWork uow) : IRoleService
+public sealed class RoleService(IUnitOfWork uow, IAuditLogger audit) : IRoleService
 {
     public async Task<RoleDto> GetByIdAsync(int id, CancellationToken ct = default)
     {
@@ -50,6 +50,9 @@ public sealed class RoleService(IUnitOfWork uow) : IRoleService
 
         await uow.Roles.AddAsync(role, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("Role.Create", "Role", role.Id, null, Snap(role), null, ct);
+        await uow.SaveChangesAsync(ct);
         return role.ToDto();
     }
 
@@ -71,6 +74,8 @@ public sealed class RoleService(IUnitOfWork uow) : IRoleService
         var requested = request.PermissionNames.Distinct().ToList();
         var permissions = await LoadPermissionsAsync(requested, ct);
 
+        var before = Snap(role);
+
         role.Name = name;
         role.Description = request.Description?.Trim();
 
@@ -83,6 +88,7 @@ public sealed class RoleService(IUnitOfWork uow) : IRoleService
         foreach (var permission in permissions.Where(p => !currentNames.Contains(p.Name)))
             role.RolePermissions.Add(new RolePermission { Role = role, Permission = permission, PermissionId = permission.Id });
 
+        await audit.LogAsync("Role.Update", "Role", role.Id, before, Snap(role), null, ct);
         await uow.SaveChangesAsync(ct);
         return role.ToDto();
     }
@@ -98,8 +104,17 @@ public sealed class RoleService(IUnitOfWork uow) : IRoleService
             throw new ConflictException("This role still has users. Move them to another role first.");
 
         uow.Roles.Remove(role);
+
+        await audit.LogAsync("Role.Delete", "Role", role.Id, new { role.Name, role.Description }, null, null, ct);
         await uow.SaveChangesAsync(ct);
     }
+
+    private static object Snap(Role r) => new
+    {
+        r.Name,
+        r.Description,
+        Permissions = r.RolePermissions.Select(rp => rp.Permission.Name).OrderBy(n => n).ToList()
+    };
 
     private async Task<IReadOnlyList<Permission>> LoadPermissionsAsync(IEnumerable<string> names, CancellationToken ct)
     {

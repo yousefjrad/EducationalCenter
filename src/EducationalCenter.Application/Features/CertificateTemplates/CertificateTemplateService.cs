@@ -6,7 +6,7 @@ using EducationalCenter.Domain.Exceptions;
 namespace EducationalCenter.Application.Features.CertificateTemplates;
 
 /// <remarks>Exactly one default template per language.</remarks>
-public sealed class CertificateTemplateService(IUnitOfWork uow) : ICertificateTemplateService
+public sealed class CertificateTemplateService(IUnitOfWork uow, IAuditLogger audit) : ICertificateTemplateService
 {
     public async Task<CertificateTemplateDto> GetByIdAsync(int id, CancellationToken ct = default)
     {
@@ -57,6 +57,9 @@ public sealed class CertificateTemplateService(IUnitOfWork uow) : ICertificateTe
 
         await uow.CertificateTemplates.AddAsync(template, ct);
         await uow.SaveChangesAsync(ct);
+
+        await audit.LogAsync("CertificateTemplate.Create", "CertificateTemplate", template.Id, null, Snap(template), null, ct);
+        await uow.SaveChangesAsync(ct);
         return template.ToDto();
     }
 
@@ -64,6 +67,8 @@ public sealed class CertificateTemplateService(IUnitOfWork uow) : ICertificateTe
     {
         var template = await uow.CertificateTemplates.GetByIdAsync(id, ct)
             ?? throw new NotFoundException(nameof(CertificateTemplate), id);
+
+        var before = Snap(template);
 
         if (template.IsDefault && !request.IsDefault)
             throw new ConflictException("This is the default template. Set another template as default instead.");
@@ -82,6 +87,8 @@ public sealed class CertificateTemplateService(IUnitOfWork uow) : ICertificateTe
         template.BodyText = request.BodyText.Trim();
 
         uow.CertificateTemplates.Update(template);
+
+        await audit.LogAsync("CertificateTemplate.Update", "CertificateTemplate", template.Id, before, Snap(template), null, ct);
         await uow.SaveChangesAsync(ct);
         return template.ToDto();
     }
@@ -97,6 +104,8 @@ public sealed class CertificateTemplateService(IUnitOfWork uow) : ICertificateTe
             UnsetDefaults(sameLanguage);
             template.IsDefault = true;
             uow.CertificateTemplates.Update(template);
+
+            await audit.LogAsync("CertificateTemplate.SetDefault", "CertificateTemplate", template.Id, null, new { template.CenterName, template.Language }, null, ct);
             await uow.SaveChangesAsync(ct);
         }
 
@@ -112,8 +121,13 @@ public sealed class CertificateTemplateService(IUnitOfWork uow) : ICertificateTe
             throw new ConflictException("The default template cannot be deleted. Set another template as default first.");
 
         uow.CertificateTemplates.Remove(template);
+
+        await audit.LogAsync("CertificateTemplate.Delete", "CertificateTemplate", template.Id, Snap(template), null, null, ct);
         await uow.SaveChangesAsync(ct);
     }
+
+    private static object Snap(CertificateTemplate x) =>
+        new { x.CenterName, x.Language, x.SignerName, x.SignerTitle, x.BodyText, x.LogoPath, x.IsDefault };
 
     private void UnsetDefaults(IEnumerable<CertificateTemplate> templates)
     {

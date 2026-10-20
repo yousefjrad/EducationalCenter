@@ -6,7 +6,7 @@ using EducationalCenter.Domain.Exceptions;
 
 namespace EducationalCenter.Application.Features.Settings;
 
-public sealed class SettingService(IUnitOfWork uow, IClock clock, ICurrentUser currentUser) : ISettingService
+public sealed class SettingService(IUnitOfWork uow, IClock clock, ICurrentUser currentUser, IAuditLogger audit) : ISettingService
 {
     public async Task<IReadOnlyList<SettingDto>> ListAsync(CancellationToken ct = default)
     {
@@ -27,9 +27,14 @@ public sealed class SettingService(IUnitOfWork uow, IClock clock, ICurrentUser c
         var value = request.Value.Trim();
         Validate(setting.Key, value);
 
+        var oldValue = setting.Value;
+
         setting.Value = value;
         setting.UpdatedAt = clock.UtcNow;
         setting.UpdatedByUserId = currentUser.UserId;
+
+        if (!string.Equals(oldValue, value, StringComparison.Ordinal))
+            await audit.LogAsync("Setting.Update", "Setting", setting.Id, new { setting.Key, Value = oldValue }, new { setting.Key, setting.Value }, null, ct);
 
         await uow.SaveChangesAsync(ct);
         return setting.ToDto();
