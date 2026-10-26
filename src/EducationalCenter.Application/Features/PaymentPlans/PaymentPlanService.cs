@@ -72,5 +72,5 @@ public sealed class PaymentPlanService(IUnitOfWork uow, IClock clock, IAuditLogg
         return plan.ToDto(Today());
     }
 
-    private DateOnly Today() => DateOnly.FromDateTime(clock.UtcNow);
+    private DateOnly Today() => clock.Today;
 }

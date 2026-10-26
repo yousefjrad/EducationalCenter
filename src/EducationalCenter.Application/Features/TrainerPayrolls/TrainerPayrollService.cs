@@ -235,7 +235,7 @@ public sealed class TrainerPayrollService(
     /// <summary>One day of tolerance so local time zones ahead of UTC are not blocked.</summary>
     private void EnsurePeriodNotInFuture(DateOnly periodEnd)
     {
-        var latestAllowed = DateOnly.FromDateTime(clock.UtcNow).AddDays(1);
+        var latestAllowed = clock.Today.AddDays(1);
         if (periodEnd > latestAllowed)
             throw new RequestValidationException("periodEnd", "'periodEnd' cannot be in the future.");
     }

@@ -12,7 +12,7 @@ internal static class QuestPdfReportRenderer
         PdfSetup.EnsureInitialized();
 
         var rtl = table.Language == "ar";
-        var printed = DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+        var printed = EducationalCenter.Application.Common.Interfaces.BusinessTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
 
         return Document.Create(container => container.Page(page =>
         {

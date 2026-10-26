@@ -97,7 +97,7 @@ public sealed class ExpenseService(
     /// <summary>One day of tolerance so local time zones ahead of UTC are not blocked.</summary>
     private void EnsureNotInFuture(DateOnly date)
     {
-        var latestAllowed = DateOnly.FromDateTime(clock.UtcNow).AddDays(1);
+        var latestAllowed = clock.Today.AddDays(1);
         if (date > latestAllowed)
             throw new RequestValidationException("expenseDate", "'expenseDate' cannot be in the future.");
     }

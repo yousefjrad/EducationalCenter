@@ -31,7 +31,7 @@ public sealed class AttendanceService(IUnitOfWork uow, IClock clock, ICurrentUse
                 throw new ConflictException("Attendance can only be recorded for scheduled or held sessions.");
 
             // One day of tolerance so local time zones ahead of UTC are not blocked.
-            var latestAllowed = DateOnly.FromDateTime(clock.UtcNow).AddDays(1);
+            var latestAllowed = clock.Today.AddDays(1);
             if (session.Date > latestAllowed)
                 throw new ConflictException("Attendance cannot be recorded for a future session.");
 

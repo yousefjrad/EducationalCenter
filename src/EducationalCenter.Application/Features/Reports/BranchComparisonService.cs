@@ -9,7 +9,7 @@ public sealed class BranchComparisonService(IUnitOfWork uow, IClock clock) : IBr
     public async Task<BranchComparisonReportDto> GetAsync(BranchComparisonQuery query, CancellationToken ct = default)
     {
         var now = clock.UtcNow;
-        var today = DateOnly.FromDateTime(now);
+        var today = clock.Today;
         var from = query.From ?? new DateOnly(today.Year, today.Month, 1);
         var to = query.To ?? today;
 

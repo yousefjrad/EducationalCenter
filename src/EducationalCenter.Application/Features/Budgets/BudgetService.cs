@@ -39,7 +39,7 @@ public sealed class BudgetService(
             throw new RequestValidationException("branch", "Select a branch first: a budget belongs to one branch (send the X-Branch-Id header).");
 
         var month = FirstOfMonth(request.Month);
-        var currentMonth = FirstOfMonth(DateOnly.FromDateTime(clock.UtcNow));
+        var currentMonth = FirstOfMonth(clock.Today);
         if (month < currentMonth)
             throw new RequestValidationException("month", "A budget cannot be requested for a past month.");
 

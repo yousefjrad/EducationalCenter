@@ -20,7 +20,7 @@ public sealed class FinancialReportService(IUnitOfWork uow, IClock clock, IRepor
 
     public async Task<OverdueInstallmentsReportDto> GetOverdueInstallmentsAsync(OverdueInstallmentsQuery query, CancellationToken ct = default)
     {
-        var asOf = query.AsOf ?? DateOnly.FromDateTime(clock.UtcNow);
+        var asOf = query.AsOf ?? clock.Today;
 
         var rows = (await uow.Reports.GetOverdueInstallmentsAsync(asOf, query.SectionId, ct))
             .Select(r => r with { DaysOverdue = Math.Max(0, asOf.DayNumber - r.DueDate.DayNumber) })

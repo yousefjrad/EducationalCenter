@@ -63,7 +63,7 @@ public sealed class CertificateService(
 
         var enrollment = certificate.Enrollment;
         var pdfBranch = await uow.Branches.GetByIdAsync(enrollment.BranchId, ct);
-        var issueDate = DateOnly.FromDateTime(certificate.IssuedAt);
+        var issueDate = BusinessTime.DateOf(certificate.IssuedAt);
 
         var values = new Dictionary<string, string>
         {

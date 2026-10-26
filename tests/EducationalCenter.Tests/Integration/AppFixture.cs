@@ -59,6 +59,7 @@ public sealed class AppFixture : IAsyncLifetime
                 ["Jwt:Issuer"] = "tests",
                 ["Jwt:Audience"] = "tests",
                 ["Jwt:SecretKey"] = new string('k', 80),
+                ["App:TimeZone"] = "UTC",
                 ["Jwt:AccessTokenMinutes"] = "15",
                 ["Backup:Enabled"] = "false",
                 ["Seed:AdminEmail"] = "admin@tests.local",

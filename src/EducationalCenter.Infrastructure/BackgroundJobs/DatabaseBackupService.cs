@@ -58,7 +58,7 @@ internal sealed class DatabaseBackupService(
 
     private static TimeSpan DelayUntilNext(TimeOnly time)
     {
-        var now = DateTime.Now;
+        var now = EducationalCenter.Application.Common.Interfaces.BusinessTime.Now;
         var next = now.Date.Add(time.ToTimeSpan());
         if (next <= now)
             next = next.AddDays(1);

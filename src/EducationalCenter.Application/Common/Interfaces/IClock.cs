@@ -4,4 +4,7 @@ namespace EducationalCenter.Application.Common.Interfaces;
 public interface IClock
 {
     DateTime UtcNow { get; }
+
+    /// <summary>Today's date in the business time zone (Syria), not in UTC.</summary>
+    DateOnly Today => DateOnly.FromDateTime(UtcNow);
 }

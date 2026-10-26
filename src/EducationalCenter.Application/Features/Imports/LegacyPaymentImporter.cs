@@ -31,7 +31,7 @@ public sealed class LegacyPaymentImporter(
     public async Task<ImportOutcome> RunAsync(ImportSheet sheet, bool commit, CancellationToken ct = default)
     {
         var userId = currentUser.RequireUserId();
-        var latestAllowed = DateOnly.FromDateTime(clock.UtcNow).AddDays(1);
+        var latestAllowed = clock.Today.AddDays(1);
 
         var errors = new ImportErrorCollector();
         var students = new Dictionary<string, Student?>(StringComparer.OrdinalIgnoreCase);

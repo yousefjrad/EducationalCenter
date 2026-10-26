@@ -16,7 +16,7 @@ public sealed class AlertService(IUnitOfWork uow, IClock clock, ICurrentUser cur
 
         OverdueInstallmentsAlert? overdue = null;
         if (granted.Contains(Permissions.Payments.View))
-            overdue = await BuildOverdueAsync(DateOnly.FromDateTime(now), ct);
+            overdue = await BuildOverdueAsync(clock.Today, ct);
 
         PendingEnrollmentsAlert? pending = null;
         if (granted.Contains(Permissions.Enrollments.View))

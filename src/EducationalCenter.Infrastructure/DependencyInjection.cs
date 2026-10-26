@@ -35,6 +35,7 @@ public static class DependencyInjection
             throw new InvalidOperationException("Jwt:AccessTokenMinutes must be greater than zero.");
 
         var backup = configuration.GetSection(BackupOptions.SectionName).Get<BackupOptions>() ?? new BackupOptions();
+        EducationalCenter.Application.Common.Interfaces.BusinessTime.Configure(configuration["App:TimeZone"]);
         if (backup.RetentionDays < 1)
             throw new InvalidOperationException("Backup:RetentionDays must be at least 1.");
 
@@ -69,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<IBackupService>(provider => provider.GetRequiredService<SqlServerBackupService>());
 
         services.AddHostedService<ExpireEnrollmentHoldsService>();
+        services.AddHostedService<ExpiredTokenCleanupService>();
         if (backup.Enabled)
             services.AddHostedService<DatabaseBackupService>();
 

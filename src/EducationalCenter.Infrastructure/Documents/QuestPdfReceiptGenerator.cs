@@ -20,7 +20,7 @@ internal sealed class QuestPdfReceiptGenerator : IReceiptPdfGenerator
 
         // Stored as UTC; the receipt shows the clock of the machine the center runs on.
         var issued = model.IssuedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm", Inv);
-        var printed = DateTime.Now.ToString("yyyy-MM-dd HH:mm", Inv);
+        var printed = EducationalCenter.Application.Common.Interfaces.BusinessTime.Now.ToString("yyyy-MM-dd HH:mm", Inv);
 
         var paid = model.Currency == Currency.Usd
             ? $"{model.AmountPaid.ToString("N2", Inv)} USD"
