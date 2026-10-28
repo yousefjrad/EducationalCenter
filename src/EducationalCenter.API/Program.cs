@@ -30,10 +30,23 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddApi(builder.Configuration);
 
+    // Real client address behind a reverse proxy (X-Forwarded-For). Only used when Security:UseForwardedHeaders is true.
+    builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
     var app = builder.Build();
 
     // Applies migrations and adds what is missing: permissions, roles, settings, templates, first Admin.
     await DatabaseInitializer.InitializeAsync(app.Services);
+
+    // Opt-in: enable only where the app is reachable through the reverse proxy alone, because the header can be spoofed.
+    // Without it every user behind the proxy shares one address, and the sign-in rate limit would count them as one person.
+    if (app.Configuration.GetValue<bool>("Security:UseForwardedHeaders"))
+        app.UseForwardedHeaders();
 
     // HTTPS is opt-in: set "Security:UseHttps": true where the site is served over HTTPS.
     if (app.Configuration.GetValue<bool>("Security:UseHttps"))
