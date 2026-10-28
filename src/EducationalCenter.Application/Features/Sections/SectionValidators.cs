@@ -49,6 +49,7 @@ public sealed class CreateSectionRequestValidator : AbstractValidator<CreateSect
             .WithMessage("The section cannot span more than 366 days.");
 
         RuleFor(x => x.Price).Must(p => p is null || p >= 0m).WithMessage("'Price' must not be negative.");
+        RuleFor(x => x.Price).Must(p => p is null || p == Math.Truncate(p.Value)).WithMessage("'Price' must be a whole number of SYP.");
         RuleFor(x => x.Capacity).InclusiveBetween(1, 1000);
         RuleFor(x => x.MinStudents).InclusiveBetween(0, 1000);
         RuleFor(x => x.MinStudents).LessThanOrEqualTo(x => x.Capacity);
@@ -75,6 +76,7 @@ public sealed class UpdateSectionRequestValidator : AbstractValidator<UpdateSect
             .WithMessage("The section cannot span more than 366 days.");
 
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0m);
+        RuleFor(x => x.Price).Must(p => p == Math.Truncate(p)).WithMessage("'Price' must be a whole number of SYP.");
         RuleFor(x => x.Capacity).InclusiveBetween(1, 1000);
         RuleFor(x => x.MinStudents).InclusiveBetween(0, 1000);
         RuleFor(x => x.MinStudents).LessThanOrEqualTo(x => x.Capacity);

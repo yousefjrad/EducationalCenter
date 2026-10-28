@@ -23,6 +23,9 @@ public sealed class PaymentPlanService(IUnitOfWork uow, IClock clock, IAuditLogg
             if (enrollment.AgreedPrice <= 0m)
                 throw new ConflictException("The agreed price is zero, so no payment plan is needed.");
 
+            if (enrollment.AgreedPrice != Math.Truncate(enrollment.AgreedPrice))
+                throw new ConflictException("The agreed price must be a whole number of SYP.");
+
             var total = enrollment.AgreedPrice;
             var count = request.InstallmentsCount;
             var baseAmount = Math.Floor(total / count);

@@ -17,7 +17,9 @@ internal static class CourseRuleExtensions
         rule.InclusiveBetween(1, 10_000);
 
     public static IRuleBuilderOptions<T, decimal> ValidPrice<T>(this IRuleBuilder<T, decimal> rule) =>
-        rule.GreaterThanOrEqualTo(0m);
+        rule.GreaterThanOrEqualTo(0m)
+            .Must(p => p == Math.Truncate(p))
+            .WithMessage("'{PropertyName}' must be a whole number of SYP.");
 }
 
 public sealed class CreateCourseRequestValidator : AbstractValidator<CreateCourseRequest>
