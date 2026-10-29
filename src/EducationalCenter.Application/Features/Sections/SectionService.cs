@@ -21,7 +21,8 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock, IAuditLogger a
     {
         var section = await uow.Sections.GetWithDetailsAsync(id, ct)
             ?? throw new NotFoundException(nameof(Section), id);
-        return section.ToDto();
+        var seatsTaken = await uow.Enrollments.CountSeatsTakenAsync(id, clock.UtcNow, ct);
+        return section.ToDto() with { SeatsTaken = seatsTaken };
     }
 
     public async Task<PagedResult<SectionDto>> ListAsync(SectionListQuery query, CancellationToken ct = default)
@@ -30,7 +31,10 @@ public sealed class SectionService(IUnitOfWork uow, IClock clock, IAuditLogger a
             query.Search?.Trim(), query.CourseId, query.TrainerId, query.RoomId, query.Status,
             query.Page, query.PageSize, ct);
 
-        return new PagedResult<SectionDto>(items.Select(s => s.ToDto()).ToList(), total, query.Page, query.PageSize);
+        var dtos = items.Select(s => s.ToDto()).ToList();
+        var seats = await uow.Enrollments.CountSeatsTakenBySectionsAsync(dtos.Select(d => d.Id).ToList(), clock.UtcNow, ct);
+        var withSeats = dtos.Select(d => d with { SeatsTaken = seats.GetValueOrDefault(d.Id) }).ToList();
+        return new PagedResult<SectionDto>(withSeats, total, query.Page, query.PageSize);
     }
 
     public async Task<SectionDto> CreateAsync(CreateSectionRequest request, CancellationToken ct = default)

@@ -41,6 +41,13 @@ internal sealed class StudentRepository(AppDbContext context) : Repository<Stude
 
 internal sealed class EnrollmentRepository(AppDbContext context) : Repository<Enrollment>(context), IEnrollmentRepository
 {
+    public Task<Dictionary<int, int>> CountSeatsTakenBySectionsAsync(IReadOnlyCollection<int> sectionIds, DateTime utcNow, CancellationToken ct = default) =>
+        Set.Where(e => sectionIds.Contains(e.SectionId)
+                       && (e.Status == EnrollmentStatus.Confirmed
+                           || (e.Status == EnrollmentStatus.Pending && e.HoldExpiresAt > utcNow)))
+           .GroupBy(e => e.SectionId)
+           .Select(g => new { g.Key, Count = g.Count() })
+           .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
     public Task<int> CountSeatsTakenAsync(int sectionId, DateTime utcNow, CancellationToken ct = default) =>
         Set.CountAsync(e => e.SectionId == sectionId
                             && (e.Status == EnrollmentStatus.Confirmed

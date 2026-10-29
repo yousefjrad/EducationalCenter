@@ -8,6 +8,9 @@ public interface IEnrollmentRepository : IRepository<Enrollment>
     /// <summary>Seats taken: Confirmed enrollments plus Pending ones whose hold has not expired.</summary>
     Task<int> CountSeatsTakenAsync(int sectionId, DateTime utcNow, CancellationToken ct = default);
 
+    /// <summary>Seats taken per section (same rule as CountSeatsTakenAsync); sections with none are absent.</summary>
+    Task<Dictionary<int, int>> CountSeatsTakenBySectionsAsync(IReadOnlyCollection<int> sectionIds, DateTime utcNow, CancellationToken ct = default);
+
     /// <summary>
     /// True if the student already has an enrollment in the section with status
     /// Confirmed, Completed, or Pending with an unexpired hold.
